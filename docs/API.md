@@ -96,26 +96,46 @@ Response:
 }
 ```
 
-## Planned MVP Endpoints
+### POST /api/sync/warrior-positions
 
-Planned response:
+Uses Nadeo Live API to fetch the world position required for each Warrior medal time.
+
+Query params:
+
+```text
+limit=optional integer
+```
+
+`limit` is useful for token/API smoke tests before running all maps.
+
+Requires backend `.env`:
+
+```text
+NADEO_LIVE_TOKEN=...
+```
+
+Response:
 
 ```json
 {
   "job_id": 1,
   "status": "success",
-  "items_total": 4213,
-  "items_success": 4213,
+  "items_total": 4559,
+  "items_success": 4559,
   "items_failed": 0,
-  "inserted": 4213,
+  "inserted": 4559,
   "updated": 0,
   "skipped": 0
 }
 ```
 
-### POST /api/sync/warrior-positions
+Notes:
 
-Uses Nadeo Live API to fetch required world position for Warrior times.
+- maps are batched by 50 per Nadeo Live request;
+- position rows are stored in `map_positions` with `position_type = "warrior"`;
+- missing `NADEO_LIVE_TOKEN` returns `400`.
+
+## Planned MVP Endpoints
 
 ### POST /api/sync/player-pbs
 

@@ -122,3 +122,20 @@ Consequences:
 
 - `POST /api/sync/warrior-data` means refresh cache and import.
 - `POST /api/sync/warrior-data?use_cache=true` means import existing cache only.
+
+## 2026-05-06: Warrior Positions Are Batched
+
+Decision:
+
+- Fetch Warrior required positions from Nadeo Live in batches of 50 maps.
+
+Why:
+
+- The Nadeo Live endpoint supports up to 50 maps per request.
+- Batch failures should not discard already successful batches.
+- `sync_jobs` can report partial sync state.
+
+Consequences:
+
+- `POST /api/sync/warrior-positions?limit=5` is available for smoke testing.
+- Full sync may take many API calls and should remain a manual action in MVP.

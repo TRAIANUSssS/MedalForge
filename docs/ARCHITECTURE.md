@@ -33,6 +33,7 @@ Current routes:
 
 - `GET /api/health`
 - `POST /api/sync/warrior-data`
+- `POST /api/sync/warrior-positions`
 - `GET /api/maps`
 - `GET /api/maps/meta`
 

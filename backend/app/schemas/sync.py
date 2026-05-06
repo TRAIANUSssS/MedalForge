@@ -10,3 +10,14 @@ class WarriorSyncResponse(BaseModel):
     inserted: int
     updated: int
     skipped: int
+
+
+class PositionSyncResponse(BaseModel):
+    job_id: int
+    status: str
+    items_total: int
+    items_success: int
+    items_failed: int
+    inserted: int
+    updated: int
+    skipped: int

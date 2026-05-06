@@ -19,6 +19,7 @@ Sprint 1 scaffold:
 - Frontend health check against the backend
 - Sprint 2 endpoints started: `POST /api/sync/warrior-data` and `GET /api/maps`
 - Sprint 3 maps table: category/status filters, search, sorting, pagination
+- Sprint 4 started: `POST /api/sync/warrior-positions` for Nadeo Live required positions
 
 ## Backend
 

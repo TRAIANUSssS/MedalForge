@@ -104,6 +104,38 @@ https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json
 
 The old `e416.dev` endpoint rejected normal backend requests with `401`, so the project uses the public raw JSON mirror from `ezio416/tm-json`.
 
+## Warrior Position Sync
+
+Required config:
+
+```text
+NADEO_LIVE_TOKEN=...
+```
+
+Smoke test a small batch:
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5"
+```
+
+Full sync:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/sync/warrior-positions
+```
+
+Behavior:
+
+```text
+1. Read maps with map_uid and warrior_time_ms from SQLite
+2. Batch maps by 50
+3. Call Nadeo Live leaderboard position endpoint
+4. Upsert position_type=warrior into map_positions
+5. GET /api/maps shows required_position and difficulty_tier
+```
+
+If `NADEO_LIVE_TOKEN` is missing, the backend returns `400`.
+
 ## Local Files
 
 Ignored local files:

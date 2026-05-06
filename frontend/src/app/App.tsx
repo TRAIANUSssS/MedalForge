@@ -5,9 +5,11 @@ import {
   getMaps,
   getMapsMeta,
   syncWarriorData,
+  syncWarriorPositions,
   type HealthResponse,
   type MapListItem,
   type MapsMetaResponse,
+  type PositionSyncResponse,
   type WarriorSyncResponse,
 } from "../api/client";
 
@@ -32,6 +34,12 @@ type SyncState =
   | { status: "ok"; result: WarriorSyncResponse }
   | { status: "error"; message: string };
 
+type PositionSyncState =
+  | { status: "idle" }
+  | { status: "running" }
+  | { status: "ok"; result: PositionSyncResponse }
+  | { status: "error"; message: string };
+
 const navItems = ["Dashboard", "Maps", "Stats", "Charts", "Settings"];
 
 export function App() {
@@ -39,6 +47,7 @@ export function App() {
   const [maps, setMaps] = useState<MapsState>({ status: "loading" });
   const [mapsMeta, setMapsMeta] = useState<MapsMetaState>({ status: "loading" });
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
+  const [positionSync, setPositionSync] = useState<PositionSyncState>({ status: "idle" });
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -123,6 +132,19 @@ export function App() {
       });
   }
 
+  function handlePositionSync() {
+    setPositionSync({ status: "running" });
+    syncWarriorPositions()
+      .then((result) => {
+        setPositionSync({ status: "ok", result });
+        void loadMaps();
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown position sync error";
+        setPositionSync({ status: "error", message });
+      });
+  }
+
   const totalMaps = maps.status === "ok" ? maps.total : 0;
   const pageStart = maps.status === "ok" && maps.total > 0 ? offset + 1 : 0;
   const pageEnd = maps.status === "ok" ? Math.min(offset + limit, maps.total) : 0;
@@ -175,6 +197,7 @@ export function App() {
               upserts parsed map rows into SQLite.
             </p>
             <SyncMessage sync={sync} />
+            <PositionSyncMessage sync={positionSync} />
           </div>
           <div className="sync-actions">
             <button
@@ -192,6 +215,14 @@ export function App() {
               onClick={() => handleSync(true)}
             >
               Parse local cache
+            </button>
+            <button
+              className="secondary-action"
+              disabled={positionSync.status === "running"}
+              type="button"
+              onClick={handlePositionSync}
+            >
+              {positionSync.status === "running" ? "Syncing positions..." : "Sync positions"}
             </button>
           </div>
         </section>
@@ -339,6 +370,27 @@ function SyncMessage({ sync }: { sync: SyncState }) {
   return (
     <p className="sync-message ok">
       {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
+      {sync.result.skipped} skipped.
+    </p>
+  );
+}
+
+function PositionSyncMessage({ sync }: { sync: PositionSyncState }) {
+  if (sync.status === "idle") {
+    return null;
+  }
+
+  if (sync.status === "running") {
+    return <p className="sync-message">Warrior position sync is running...</p>;
+  }
+
+  if (sync.status === "error") {
+    return <p className="sync-message error">Position sync failed: {sync.message}</p>;
+  }
+
+  return (
+    <p className="sync-message ok">
+      Positions {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
       {sync.result.skipped} skipped.
     </p>
   );

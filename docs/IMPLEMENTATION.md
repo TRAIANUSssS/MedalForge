@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 2: Warrior data sync and maps API.
+- Sprint 4: Nadeo Live Warrior positions.
 
 ## Stage Checklist
 
@@ -26,7 +26,7 @@ Current focus:
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
 | Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Sync refreshes local cache, then imports 4559 unique maps |
 | Sprint 3: Maps table UI | Done | Category/status filters, search submit/reset, sorting, pagination, skeleton/error/empty states, cleaned TM text | Frontend can browse and filter 4559 local maps |
-| Sprint 4: Warrior positions | Pending | Nadeo Live service, required position, difficulty tier | Maps have `required_position` |
+| Sprint 4: Warrior positions | In progress | Nadeo Live service, batched sync endpoint, map position upsert, frontend sync action | Code ready; needs real `NADEO_LIVE_TOKEN` smoke test |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
 | Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
 
@@ -164,3 +164,34 @@ Definition of done remains:
 - raw JSON cache is written;
 - sync result records counts for total, inserted, updated, skipped, failed;
 - maps endpoint returns stable response shape for frontend work.
+
+### Sprint 4: Warrior Positions
+
+Status: In progress
+
+Implemented:
+
+- `nadeo_live_service.py` for Nadeo Live leaderboard position calls.
+- `POST /api/sync/warrior-positions`.
+- Batch size: 50 maps per Nadeo Live request.
+- Reads `NADEO_LIVE_TOKEN` from backend `.env`.
+- Saves rows into `map_positions`:
+  - `position_type = "warrior"`;
+  - `score_ms = warrior_time_ms`;
+  - `world_position = required position`.
+- Maps API already exposes:
+  - `required_position`;
+  - `difficulty_tier`.
+- Frontend has a `Sync positions` action and result/error message.
+
+Needs verification with real token:
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5"
+```
+
+Expected result:
+
+- positions are inserted into `map_positions`;
+- maps table starts showing required position;
+- difficulty tier is computed from required position.

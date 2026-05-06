@@ -14,6 +14,8 @@ export type WarriorSyncResponse = {
   skipped: number;
 };
 
+export type PositionSyncResponse = WarriorSyncResponse;
+
 export type MapListItem = {
   map_uid: string;
   map_id: string | null;
@@ -53,6 +55,11 @@ export async function getHealth(): Promise<HealthResponse> {
 export async function syncWarriorData(useCache = false): Promise<WarriorSyncResponse> {
   const query = useCache ? "?use_cache=true" : "";
   return request<WarriorSyncResponse>(`/api/sync/warrior-data${query}`, { method: "POST" });
+}
+
+export async function syncWarriorPositions(limit?: number): Promise<PositionSyncResponse> {
+  const query = limit ? `?limit=${limit}` : "";
+  return request<PositionSyncResponse>(`/api/sync/warrior-positions${query}`, { method: "POST" });
 }
 
 export async function getMaps(params: {
