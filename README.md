@@ -17,6 +17,7 @@ Sprint 1 scaffold:
 - SQLAlchemy models for the planned MVP tables
 - React/Vite frontend shell
 - Frontend health check against the backend
+- Sprint 2 endpoints started: `POST /api/sync/warrior-data` and `GET /api/maps`
 
 ## Backend
 
@@ -64,9 +65,8 @@ http://localhost:5173
 
 ## Next Step
 
-Sprint 2 should add Warrior data sync:
+Sprint 2 should be completed by resolving Warrior source access or providing raw cache:
 
-- `POST /api/sync/warrior-data`
-- raw JSON cache at `backend/data/raw/warrior_all.json`
-- defensive parsing and upsert into `warrior_maps`
-- `GET /api/maps`
+- direct endpoint currently returns `401` to normal backend requests;
+- raw cache fallback is available with `POST /api/sync/warrior-data?use_cache=true`;
+- after real data is parsed, inspect map fields and refine aliases if needed.

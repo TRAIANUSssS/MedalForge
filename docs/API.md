@@ -21,11 +21,50 @@ Response:
 }
 ```
 
-## Planned MVP Endpoints
-
 ### POST /api/sync/warrior-data
 
 Fetches Warrior medal source data, saves raw JSON, parses maps, and upserts `warrior_maps`.
+
+Query params:
+
+```text
+use_cache=false
+```
+
+If `use_cache=true`, backend parses `backend/data/raw/warrior_all.json` instead of calling the external endpoint.
+
+Current note:
+
+- The configured public endpoint currently returns `401` to normal backend requests unless called with the expected Warrior Medals plugin identity.
+
+### GET /api/maps
+
+Returns paginated local maps.
+
+Query params:
+
+```text
+status=all|earned|missing|close|not_played
+category=...
+search=...
+sort=name|warrior_time_ms|author_time_ms|category|campaign_name|created_at|updated_at
+order=asc|desc
+limit=100
+offset=0
+```
+
+Response:
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "limit": 100,
+  "offset": 0
+}
+```
+
+## Planned MVP Endpoints
 
 Planned response:
 
@@ -39,34 +78,6 @@ Planned response:
   "inserted": 4213,
   "updated": 0,
   "skipped": 0
-}
-```
-
-### GET /api/maps
-
-Returns paginated maps for the table UI.
-
-Planned query params:
-
-```text
-status=all|earned|missing|close|not_played
-category=...
-difficulty=...
-search=...
-sort=warrior_time_ms
-order=asc|desc
-limit=100
-offset=0
-```
-
-Planned response:
-
-```json
-{
-  "items": [],
-  "total": 0,
-  "limit": 100,
-  "offset": 0
 }
 ```
 

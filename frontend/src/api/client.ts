@@ -3,14 +3,84 @@ export type HealthResponse = {
   version: string;
 };
 
+export type WarriorSyncResponse = {
+  job_id: number;
+  status: string;
+  items_total: number;
+  items_success: number;
+  items_failed: number;
+  inserted: number;
+  updated: number;
+  skipped: number;
+};
+
+export type MapListItem = {
+  map_uid: string;
+  map_id: string | null;
+  name: string | null;
+  author_name: string | null;
+  category: string | null;
+  campaign_name: string | null;
+  warrior_time_ms: number | null;
+  author_time_ms: number | null;
+  required_position: number | null;
+  difficulty_tier: string | null;
+  pb_time_ms: number | null;
+  has_warrior: boolean;
+  diff_to_warrior_ms: number | null;
+  grind_status: string;
+};
+
+export type MapsResponse = {
+  items: MapListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function getHealth(): Promise<HealthResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/health`);
+  return request<HealthResponse>("/api/health");
+}
+
+export async function syncWarriorData(useCache = false): Promise<WarriorSyncResponse> {
+  const query = useCache ? "?use_cache=true" : "";
+  return request<WarriorSyncResponse>(`/api/sync/warrior-data${query}`, { method: "POST" });
+}
+
+export async function getMaps(params: {
+  search?: string;
+  sort?: string;
+  order?: "asc" | "desc";
+  limit?: number;
+  offset?: number;
+}): Promise<MapsResponse> {
+  const query = new URLSearchParams();
+  if (params.search) query.set("search", params.search);
+  if (params.sort) query.set("sort", params.sort);
+  if (params.order) query.set("order", params.order);
+  query.set("limit", String(params.limit ?? 50));
+  query.set("offset", String(params.offset ?? 0));
+
+  return request<MapsResponse>(`/api/maps?${query.toString()}`);
+}
+
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${path}`, init);
 
   if (!response.ok) {
-    throw new Error(`Health check failed: ${response.status}`);
+    let message = `${response.status} ${response.statusText}`;
+    try {
+      const body = (await response.json()) as { detail?: string };
+      if (body.detail) {
+        message = body.detail;
+      }
+    } catch {
+      // Keep the HTTP status message when the backend did not return JSON.
+    }
+    throw new Error(message);
   }
 
-  return response.json() as Promise<HealthResponse>;
+  return response.json() as Promise<T>;
 }

@@ -69,3 +69,20 @@ Consequences:
 
 - Token expiration should produce clear Settings/sync errors.
 - Real token values must never be committed.
+
+## 2026-05-06: Support Warrior Raw Cache Parsing
+
+Decision:
+
+- `POST /api/sync/warrior-data?use_cache=true` parses `backend/data/raw/warrior_all.json` without calling the external endpoint.
+
+Why:
+
+- The Warrior source endpoint currently rejects normal backend requests with `401`.
+- Keeping the parser and upsert testable without network access makes Sprint 2 progress possible.
+- Raw cache parsing is useful for debugging even after direct sync works.
+
+Consequences:
+
+- The UI exposes both direct sync and local cache parse actions.
+- Sprint 2 is not fully complete until real Warrior data is parsed successfully.

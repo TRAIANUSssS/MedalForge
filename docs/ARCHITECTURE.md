@@ -32,6 +32,8 @@ The backend owns all external API access. The frontend should not call Warrior o
 Current routes:
 
 - `GET /api/health`
+- `POST /api/sync/warrior-data`
+- `GET /api/maps`
 
 Planned route groups:
 
@@ -71,6 +73,7 @@ Principles:
 
 - cache raw external responses;
 - parse defensively;
+- support parsing from local cache when the external source is unavailable;
 - store partial results when possible;
 - record sync jobs for visibility;
 - do not fail a whole sync because one map is malformed.

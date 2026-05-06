@@ -67,6 +67,31 @@ cd frontend
 npm run build
 ```
 
+## Warrior Data Sync
+
+Normal sync:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/sync/warrior-data
+```
+
+Parse an existing raw cache instead of calling the external endpoint:
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-data?use_cache=true"
+```
+
+Raw cache path:
+
+```text
+backend/data/raw/warrior_all.json
+```
+
+Current external API note:
+
+- `https://e416.dev/api3/tm/warrior/all` may return `401` unless the request is accepted as coming from the Warrior Medals plugin.
+- If a required user agent or header is found, set `WARRIOR_API_USER_AGENT` in `backend/.env`.
+
 ## Local Files
 
 Ignored local files:

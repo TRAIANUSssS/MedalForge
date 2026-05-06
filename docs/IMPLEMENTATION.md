@@ -24,8 +24,8 @@ Current focus:
 | Step | Status | Result | Verification |
 | --- | --- | --- | --- |
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
-| Sprint 2: Warrior data sync | Next | Raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Sync creates rows, maps endpoint returns paginated data |
-| Sprint 3: Maps table UI | Pending | Layout, table, search, filters, sorting, loading/error states | Frontend can browse synced maps |
+| Sprint 2: Warrior data sync | In progress | Sync endpoint, local cache parser, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Local parser and maps endpoint work; external source currently returns `401` |
+| Sprint 3: Maps table UI | Started | Basic table, search, sorting, sync buttons, loading/error states | Frontend can browse local maps from `GET /api/maps` |
 | Sprint 4: Warrior positions | Pending | Nadeo Live service, required position, difficulty tier | Maps have `required_position` |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
 | Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
@@ -84,18 +84,28 @@ npm run build
 
 ## Next Step
 
-Sprint 2 starts with backend-first work:
+Sprint 2 backend/frontend implementation is present:
 
-1. Add `SyncJob` repository helpers.
-2. Add `warrior_sync_service.py`.
-3. Fetch `WARRIOR_API_URL` with `httpx`.
-4. Save raw response to `backend/data/raw/warrior_all.json`.
-5. Inspect and defensively parse the JSON shape.
-6. Upsert maps into `warrior_maps`, preserving each raw map object in `raw_json`.
-7. Expose `POST /api/sync/warrior-data`.
-8. Add `GET /api/maps` with pagination and simple sorting/search.
+- `POST /api/sync/warrior-data`
+- `POST /api/sync/warrior-data?use_cache=true`
+- raw JSON cache path: `backend/data/raw/warrior_all.json`
+- defensive parser in `warrior_sync_service.py`
+- SQLite upsert into `warrior_maps`
+- `GET /api/maps`
+- frontend sync action, cache parse action, search, sorting, and maps table
 
-Definition of done:
+Current blocker:
+
+- `https://e416.dev/api3/tm/warrior/all` returns `401` for a normal backend request with message that the endpoint must be called from the Warrior Medals plugin.
+
+To complete Sprint 2:
+
+1. Find or provide the correct request identity/header for the Warrior endpoint, or export a valid raw JSON cache.
+2. Run `POST /api/sync/warrior-data`, or put the JSON at `backend/data/raw/warrior_all.json` and run `POST /api/sync/warrior-data?use_cache=true`.
+3. Inspect parsed row quality and extend field aliases if the real JSON uses unexpected names.
+4. Remove any temporary sample/test rows from local SQLite if needed.
+
+Definition of done remains:
 
 - sync endpoint creates or updates map rows;
 - raw JSON cache is written;

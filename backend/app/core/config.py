@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     app_version: str = "0.1.0"
     database_url: str = "sqlite:///./data/app.db"
     warrior_api_url: str = "https://e416.dev/api3/tm/warrior/all"
+    warrior_api_user_agent: str | None = None
     nadeo_account_id: str | None = None
     nadeo_core_token: str | None = None
     nadeo_live_token: str | None = None
