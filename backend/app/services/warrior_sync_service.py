@@ -92,6 +92,7 @@ def load_cached_warrior_payload() -> Any:
 
 def upsert_warrior_maps(db: Session, payload: Any) -> dict[str, int]:
     raw_maps = extract_map_objects(payload)
+    parsed_by_uid: dict[str, ParsedWarriorMap] = {}
     inserted = 0
     updated = 0
     skipped = 0
@@ -103,7 +104,15 @@ def upsert_warrior_maps(db: Session, payload: Any) -> dict[str, int]:
             if parsed is None:
                 skipped += 1
                 continue
+            if parsed.map_uid in parsed_by_uid:
+                skipped += 1
+                continue
+            parsed_by_uid[parsed.map_uid] = parsed
+        except Exception:
+            failed += 1
 
+    for parsed in parsed_by_uid.values():
+        try:
             existing = db.scalar(select(WarriorMap).where(WarriorMap.map_uid == parsed.map_uid))
             if existing is None:
                 db.add(_new_warrior_map(parsed))
@@ -112,6 +121,7 @@ def upsert_warrior_maps(db: Session, payload: Any) -> dict[str, int]:
                 _update_warrior_map(existing, parsed)
                 updated += 1
         except Exception:
+            db.rollback()
             failed += 1
 
     db.commit()
@@ -137,13 +147,13 @@ def extract_map_objects(payload: Any) -> list[dict[str, Any]]:
         if isinstance(value, list):
             return [item for item in value if isinstance(item, dict)]
 
-    best: list[dict[str, Any]] = []
-    for value in payload.values():
+    category_maps: list[dict[str, Any]] = []
+    for key, value in payload.items():
         if isinstance(value, list):
-            candidates = [item for item in value if isinstance(item, dict)]
-            if len(candidates) > len(best):
-                best = candidates
-    return best
+            for item in value:
+                if isinstance(item, dict):
+                    category_maps.append({"category": key, **item})
+    return category_maps
 
 
 def parse_warrior_map(raw_map: dict[str, Any]) -> ParsedWarriorMap | None:

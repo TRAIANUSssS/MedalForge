@@ -24,7 +24,7 @@ Current focus:
 | Step | Status | Result | Verification |
 | --- | --- | --- | --- |
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
-| Sprint 2: Warrior data sync | In progress | Sync endpoint, local cache parser, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Local parser and maps endpoint work; external source currently returns `401` |
+| Sprint 2: Warrior data sync | Done via cache | Sync endpoint, local cache parser, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | `docs/warrior.json` imports 4559 unique maps; external source still returns `401` |
 | Sprint 3: Maps table UI | Started | Basic table, search, sorting, sync buttons, loading/error states | Frontend can browse local maps from `GET /api/maps` |
 | Sprint 4: Warrior positions | Pending | Nadeo Live service, required position, difficulty tier | Maps have `required_position` |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
@@ -94,16 +94,22 @@ Sprint 2 backend/frontend implementation is present:
 - `GET /api/maps`
 - frontend sync action, cache parse action, search, sorting, and maps table
 
-Current blocker:
+Current external API blocker:
 
 - `https://e416.dev/api3/tm/warrior/all` returns `401` for a normal backend request with message that the endpoint must be called from the Warrior Medals plugin.
 
-To complete Sprint 2:
+Local cache result:
 
-1. Find or provide the correct request identity/header for the Warrior endpoint, or export a valid raw JSON cache.
-2. Run `POST /api/sync/warrior-data`, or put the JSON at `backend/data/raw/warrior_all.json` and run `POST /api/sync/warrior-data?use_cache=true`.
-3. Inspect parsed row quality and extend field aliases if the real JSON uses unexpected names.
-4. Remove any temporary sample/test rows from local SQLite if needed.
+- `docs/warrior.json` contains 4561 medal objects.
+- It imports as 4559 unique `mapUid` rows.
+- 2 duplicate `mapUid` entries are skipped during import.
+- Categories detected: `Grand`, `Seasonal`, `Weekly`, `Totd`, `Other`.
+
+To fully complete direct external sync later:
+
+1. Find or provide the correct request identity/header for the Warrior endpoint.
+2. Run `POST /api/sync/warrior-data`.
+3. Compare direct response shape with the cache file and extend field aliases if needed.
 
 Definition of done remains:
 
