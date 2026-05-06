@@ -65,8 +65,8 @@ http://localhost:5173
 
 ## Next Step
 
-Sprint 2 should be completed by resolving Warrior source access or providing raw cache:
+Sprint 2 is using the GitHub raw Warrior data source:
 
-- direct endpoint currently returns `401` to normal backend requests;
-- raw cache fallback is available with `POST /api/sync/warrior-data?use_cache=true`;
-- after real data is parsed, inspect map fields and refine aliases if needed.
+- `https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json`
+- normal sync: `POST /api/sync/warrior-data`
+- raw cache fallback: `POST /api/sync/warrior-data?use_cache=true`

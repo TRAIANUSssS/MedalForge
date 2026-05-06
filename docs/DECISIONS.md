@@ -86,3 +86,21 @@ Consequences:
 
 - The UI exposes both direct sync and local cache parse actions.
 - Sprint 2 is not fully complete until real Warrior data is parsed successfully.
+
+## 2026-05-06: Use GitHub Raw Warrior JSON Source
+
+Decision:
+
+- Use `https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json` as the default `WARRIOR_API_URL`.
+
+Why:
+
+- It exposes the same Warrior data as public JSON without the plugin-only restriction.
+- It is expected to update when new maps are added.
+- The existing parser supports its category-based structure.
+
+Consequences:
+
+- Direct `POST /api/sync/warrior-data` is now the normal sync path.
+- The old `e416.dev` endpoint is no longer the default.
+- Local cache parsing remains useful for offline/debug sync.

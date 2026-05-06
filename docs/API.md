@@ -33,9 +33,11 @@ use_cache=false
 
 If `use_cache=true`, backend parses `backend/data/raw/warrior_all.json` instead of calling the external endpoint.
 
-Current note:
+Source:
 
-- The configured public endpoint currently returns `401` to normal backend requests unless called with the expected Warrior Medals plugin identity.
+```text
+https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json
+```
 
 ### GET /api/maps
 

@@ -24,7 +24,7 @@ Current focus:
 | Step | Status | Result | Verification |
 | --- | --- | --- | --- |
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
-| Sprint 2: Warrior data sync | Done via cache | Sync endpoint, local cache parser, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | `docs/warrior.json` imports 4559 unique maps; external source still returns `401` |
+| Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | GitHub raw source imports 4559 unique maps |
 | Sprint 3: Maps table UI | Started | Basic table, search, sorting, sync buttons, loading/error states | Frontend can browse local maps from `GET /api/maps` |
 | Sprint 4: Warrior positions | Pending | Nadeo Live service, required position, difficulty tier | Maps have `required_position` |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
@@ -94,9 +94,10 @@ Sprint 2 backend/frontend implementation is present:
 - `GET /api/maps`
 - frontend sync action, cache parse action, search, sorting, and maps table
 
-Current external API blocker:
+Warrior source:
 
-- `https://e416.dev/api3/tm/warrior/all` returns `401` for a normal backend request with message that the endpoint must be called from the Warrior Medals plugin.
+- `https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json`
+- The old `https://e416.dev/api3/tm/warrior/all` endpoint returns `401` for a normal backend request.
 
 Local cache result:
 
@@ -105,11 +106,11 @@ Local cache result:
 - 2 duplicate `mapUid` entries are skipped during import.
 - Categories detected: `Grand`, `Seasonal`, `Weekly`, `Totd`, `Other`.
 
-To fully complete direct external sync later:
+Next practical step:
 
-1. Find or provide the correct request identity/header for the Warrior endpoint.
-2. Run `POST /api/sync/warrior-data`.
-3. Compare direct response shape with the cache file and extend field aliases if needed.
+1. Use direct `POST /api/sync/warrior-data` as the normal sync path.
+2. Keep `POST /api/sync/warrior-data?use_cache=true` as a fallback/debug path.
+3. Continue with Sprint 3 polish for the maps table UI.
 
 Definition of done remains:
 

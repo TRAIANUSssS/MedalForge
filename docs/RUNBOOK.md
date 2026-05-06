@@ -87,10 +87,13 @@ Raw cache path:
 backend/data/raw/warrior_all.json
 ```
 
-Current external API note:
+Current source:
 
-- `https://e416.dev/api3/tm/warrior/all` may return `401` unless the request is accepted as coming from the Warrior Medals plugin.
-- If a required user agent or header is found, set `WARRIOR_API_USER_AGENT` in `backend/.env`.
+```text
+https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json
+```
+
+The old `e416.dev` endpoint rejected normal backend requests with `401`, so the project uses the public raw JSON mirror from `ezio416/tm-json`.
 
 ## Local Files
 
