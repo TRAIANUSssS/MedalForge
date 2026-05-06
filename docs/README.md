@@ -2,12 +2,16 @@
 
 Start here:
 
+- [Implementation status](IMPLEMENTATION.md)
 - [Project plan](PROJECT_PLAN.md)
+
+Reference docs:
+
+- [Architecture](ARCHITECTURE.md)
+- [API](API.md)
+- [Runbook](RUNBOOK.md)
+- [Decisions](DECISIONS.md)
 
 Suggested future docs:
 
-- `ARCHITECTURE.md` - backend/frontend/data model decisions
-- `API.md` - backend endpoints and response shapes
-- `RUNBOOK.md` - local setup, sync, troubleshooting
-- `DECISIONS.md` - short architecture decision records
 - `CHANGELOG.md` - user-visible project changes

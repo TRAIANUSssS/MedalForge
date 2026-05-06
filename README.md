@@ -4,7 +4,9 @@ Local Trackmania Warrior Medals dashboard.
 
 ## Documentation
 
+- [Implementation status](docs/IMPLEMENTATION.md)
 - [Project plan](docs/PROJECT_PLAN.md)
+- [Docs index](docs/README.md)
 
 ## Current State
 
