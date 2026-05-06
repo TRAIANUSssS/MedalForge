@@ -2,6 +2,10 @@
 
 Local Trackmania Warrior Medals dashboard.
 
+## Documentation
+
+- [Project plan](docs/PROJECT_PLAN.md)
+
 ## Current State
 
 Sprint 1 scaffold:
