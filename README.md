@@ -18,6 +18,7 @@ Sprint 1 scaffold:
 - React/Vite frontend shell
 - Frontend health check against the backend
 - Sprint 2 endpoints started: `POST /api/sync/warrior-data` and `GET /api/maps`
+- Sprint 3 maps table: category/status filters, search, sorting, pagination
 
 ## Backend
 

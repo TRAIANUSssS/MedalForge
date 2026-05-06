@@ -4,11 +4,16 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.repositories.maps_repository import list_maps
-from app.schemas.maps import MapsResponse
+from app.repositories.maps_repository import get_maps_meta, list_maps
+from app.schemas.maps import MapsMetaResponse, MapsResponse
 
 
 router = APIRouter(prefix="/api/maps", tags=["maps"])
+
+
+@router.get("/meta", response_model=MapsMetaResponse)
+def get_maps_metadata(db: Session = Depends(get_db)) -> dict:
+    return get_maps_meta(db)
 
 
 @router.get("", response_model=MapsResponse)

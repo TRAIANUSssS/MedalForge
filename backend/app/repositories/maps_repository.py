@@ -62,6 +62,57 @@ def list_maps(
     return [_map_row_to_dict(row) for row in rows], total
 
 
+def get_maps_meta(db: Session) -> dict:
+    categories = db.execute(
+        select(WarriorMap.category, func.count(WarriorMap.id))
+        .where(WarriorMap.category.is_not(None))
+        .group_by(WarriorMap.category)
+        .order_by(WarriorMap.category.asc())
+    ).all()
+
+    total = db.scalar(select(func.count(WarriorMap.id))) or 0
+    earned = (
+        db.scalar(
+            select(func.count(WarriorMap.id))
+            .join(PlayerRecord, PlayerRecord.map_uid == WarriorMap.map_uid)
+            .where(PlayerRecord.has_warrior.is_(True))
+        )
+        or 0
+    )
+    missing = (
+        db.scalar(
+            select(func.count(WarriorMap.id))
+            .join(PlayerRecord, PlayerRecord.map_uid == WarriorMap.map_uid)
+            .where(PlayerRecord.has_warrior.is_(False), PlayerRecord.pb_time_ms.is_not(None))
+        )
+        or 0
+    )
+    close = (
+        db.scalar(
+            select(func.count(WarriorMap.id))
+            .join(PlayerRecord, PlayerRecord.map_uid == WarriorMap.map_uid)
+            .where(PlayerRecord.diff_to_warrior_ms > 0, PlayerRecord.diff_to_warrior_ms <= 1000)
+        )
+        or 0
+    )
+    not_played = db.scalar(
+        select(func.count(WarriorMap.id))
+        .outerjoin(PlayerRecord, PlayerRecord.map_uid == WarriorMap.map_uid)
+        .where(PlayerRecord.id.is_(None))
+    ) or 0
+
+    return {
+        "categories": [{"name": name, "count": count} for name, count in categories],
+        "status_counts": {
+            "all": total,
+            "earned": earned,
+            "missing": missing,
+            "close": close,
+            "not_played": not_played,
+        },
+    }
+
+
 def _apply_filters(
     statement: Select,
     *,

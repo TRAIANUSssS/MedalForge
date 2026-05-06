@@ -72,6 +72,30 @@ Response:
 }
 ```
 
+### GET /api/maps/meta
+
+Returns metadata for maps table filters.
+
+Response:
+
+```json
+{
+  "categories": [
+    {
+      "name": "Totd",
+      "count": 2131
+    }
+  ],
+  "status_counts": {
+    "all": 4559,
+    "earned": 0,
+    "missing": 0,
+    "close": 0,
+    "not_played": 4559
+  }
+}
+```
+
 ## Planned MVP Endpoints
 
 Planned response:

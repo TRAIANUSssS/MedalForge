@@ -34,6 +34,7 @@ Current routes:
 - `GET /api/health`
 - `POST /api/sync/warrior-data`
 - `GET /api/maps`
+- `GET /api/maps/meta`
 
 Planned route groups:
 

@@ -23,6 +23,7 @@ export type MapListItem = {
   campaign_name: string | null;
   warrior_time_ms: number | null;
   author_time_ms: number | null;
+  world_record_time_ms: number | null;
   required_position: number | null;
   difficulty_tier: string | null;
   pb_time_ms: number | null;
@@ -38,6 +39,11 @@ export type MapsResponse = {
   offset: number;
 };
 
+export type MapsMetaResponse = {
+  categories: Array<{ name: string; count: number }>;
+  status_counts: Record<string, number>;
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function getHealth(): Promise<HealthResponse> {
@@ -50,6 +56,8 @@ export async function syncWarriorData(useCache = false): Promise<WarriorSyncResp
 }
 
 export async function getMaps(params: {
+  status?: string;
+  category?: string;
   search?: string;
   sort?: string;
   order?: "asc" | "desc";
@@ -57,6 +65,8 @@ export async function getMaps(params: {
   offset?: number;
 }): Promise<MapsResponse> {
   const query = new URLSearchParams();
+  if (params.status && params.status !== "all") query.set("status", params.status);
+  if (params.category) query.set("category", params.category);
   if (params.search) query.set("search", params.search);
   if (params.sort) query.set("sort", params.sort);
   if (params.order) query.set("order", params.order);
@@ -64,6 +74,10 @@ export async function getMaps(params: {
   query.set("offset", String(params.offset ?? 0));
 
   return request<MapsResponse>(`/api/maps?${query.toString()}`);
+}
+
+export async function getMapsMeta(): Promise<MapsMetaResponse> {
+  return request<MapsMetaResponse>("/api/maps/meta");
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

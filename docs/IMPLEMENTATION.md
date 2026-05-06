@@ -25,7 +25,7 @@ Current focus:
 | --- | --- | --- | --- |
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
 | Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Sync refreshes local cache, then imports 4559 unique maps |
-| Sprint 3: Maps table UI | Started | Basic table, search, sorting, sync buttons, loading/error states | Frontend can browse local maps from `GET /api/maps` |
+| Sprint 3: Maps table UI | Done | Category/status filters, search submit/reset, sorting, pagination, skeleton/error/empty states, cleaned TM text | Frontend can browse and filter 4559 local maps |
 | Sprint 4: Warrior positions | Pending | Nadeo Live service, required position, difficulty tier | Maps have `required_position` |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
 | Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
@@ -116,7 +116,47 @@ Next practical step:
 
 1. Use `POST /api/sync/warrior-data` as the normal refresh-cache-and-import path.
 2. Keep `POST /api/sync/warrior-data?use_cache=true` as a local-cache-only fallback/debug path.
-3. Continue with Sprint 3 polish for the maps table UI.
+3. Continue with Sprint 4: Nadeo Live service for Warrior required positions.
+
+### Sprint 3: Maps Table UI
+
+Status: Done
+
+Implemented:
+
+- `GET /api/maps/meta` for category options and status counts.
+- Category filter based on real local data.
+- Status filter segments:
+  - all;
+  - earned;
+  - missing;
+  - close;
+  - not played.
+- Search submit and reset behavior.
+- Sort controls for name, Warrior time, Author time, category, and campaign.
+- Pagination with fixed page size.
+- Skeleton loading state, error state, and empty state.
+- Trackmania formatting code cleanup for displayed map names.
+- Category badges and PB/status display placeholders.
+
+Verification:
+
+```powershell
+cd backend
+.\.venv\Scripts\python - <<'PY'
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+print(client.get("/api/maps/meta").json())
+print(client.get("/api/maps?limit=2&category=Totd&sort=warrior_time_ms&order=asc").json())
+PY
+```
+
+```powershell
+cd frontend
+npm run build
+```
 
 Definition of done remains:
 

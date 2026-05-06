@@ -34,3 +34,13 @@ class MapsResponse(BaseModel):
     total: int
     limit: int = Field(ge=1, le=500)
     offset: int = Field(ge=0)
+
+
+class MapCategoryMeta(BaseModel):
+    name: str
+    count: int
+
+
+class MapsMetaResponse(BaseModel):
+    categories: list[MapCategoryMeta]
+    status_counts: dict[str, int]

@@ -3,9 +3,11 @@ import { useEffect, useState } from "react";
 import {
   getHealth,
   getMaps,
+  getMapsMeta,
   syncWarriorData,
   type HealthResponse,
   type MapListItem,
+  type MapsMetaResponse,
   type WarriorSyncResponse,
 } from "../api/client";
 
@@ -19,6 +21,11 @@ type MapsState =
   | { status: "ok"; items: MapListItem[]; total: number }
   | { status: "error"; message: string };
 
+type MapsMetaState =
+  | { status: "loading" }
+  | { status: "ok"; data: MapsMetaResponse }
+  | { status: "error"; message: string };
+
 type SyncState =
   | { status: "idle" }
   | { status: "running" }
@@ -30,10 +37,16 @@ const navItems = ["Dashboard", "Maps", "Stats", "Charts", "Settings"];
 export function App() {
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [maps, setMaps] = useState<MapsState>({ status: "loading" });
+  const [mapsMeta, setMapsMeta] = useState<MapsMetaState>({ status: "loading" });
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [category, setCategory] = useState("");
   const [sort, setSort] = useState("name");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [offset, setOffset] = useState(0);
+  const limit = 50;
 
   useEffect(() => {
     let cancelled = false;
@@ -58,11 +71,23 @@ export function App() {
 
   useEffect(() => {
     void loadMaps();
-  }, [sort, order]);
+  }, [query, statusFilter, category, sort, order, offset]);
 
-  function loadMaps(searchOverride = search) {
+  useEffect(() => {
+    void loadMapsMeta();
+  }, []);
+
+  function loadMaps(searchOverride = query) {
     setMaps({ status: "loading" });
-    return getMaps({ search: searchOverride, sort, order, limit: 50 })
+    return getMaps({
+      status: statusFilter,
+      category,
+      search: searchOverride,
+      sort,
+      order,
+      limit,
+      offset,
+    })
       .then((data) => {
         setMaps({ status: "ok", items: data.items, total: data.total });
       })
@@ -72,11 +97,24 @@ export function App() {
       });
   }
 
+  function loadMapsMeta() {
+    return getMapsMeta()
+      .then((data) => {
+        setMapsMeta({ status: "ok", data });
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown maps metadata error";
+        setMapsMeta({ status: "error", message });
+      });
+  }
+
   function handleSync(useCache = false) {
     setSync({ status: "running" });
     syncWarriorData(useCache)
       .then((result) => {
         setSync({ status: "ok", result });
+        setOffset(0);
+        void loadMapsMeta();
         void loadMaps();
       })
       .catch((error: unknown) => {
@@ -86,6 +124,8 @@ export function App() {
   }
 
   const totalMaps = maps.status === "ok" ? maps.total : 0;
+  const pageStart = maps.status === "ok" && maps.total > 0 ? offset + 1 : 0;
+  const pageEnd = maps.status === "ok" ? Math.min(offset + limit, maps.total) : 0;
 
   return (
     <div className="app-shell">
@@ -111,10 +151,10 @@ export function App() {
         <section className="page-header">
           <div>
             <p className="eyebrow">Sprint 2</p>
-            <h2>Warrior data sync</h2>
+            <h2>Maps workspace</h2>
             <p>
-              Sync Warrior medal data into local SQLite, cache raw JSON, and browse the first maps
-              API from the frontend.
+              Browse local Warrior medal data, filter by source category, search maps, and refresh
+              the raw cache when the upstream JSON changes.
             </p>
           </div>
           <HealthBadge health={health} />
@@ -160,13 +200,18 @@ export function App() {
           <div className="table-toolbar">
             <div>
               <h3>Maps</h3>
-              <p>{maps.status === "ok" ? `${maps.total} maps found` : "Local map database"}</p>
+              <p>
+                {maps.status === "ok"
+                  ? `${pageStart}-${pageEnd} of ${maps.total} maps`
+                  : "Local map database"}
+              </p>
             </div>
             <form
               className="search-form"
               onSubmit={(event) => {
                 event.preventDefault();
-                void loadMaps();
+                setOffset(0);
+                setQuery(search.trim());
               }}
             >
               <input
@@ -176,9 +221,29 @@ export function App() {
                 onChange={(event) => setSearch(event.target.value)}
               />
               <select
+                aria-label="Filter by category"
+                value={category}
+                onChange={(event) => {
+                  setOffset(0);
+                  setCategory(event.target.value);
+                }}
+              >
+                <option value="">All categories</option>
+                {mapsMeta.status === "ok"
+                  ? mapsMeta.data.categories.map((item) => (
+                      <option key={item.name} value={item.name}>
+                        {item.name} ({item.count})
+                      </option>
+                    ))
+                  : null}
+              </select>
+              <select
                 aria-label="Sort maps"
                 value={sort}
-                onChange={(event) => setSort(event.target.value)}
+                onChange={(event) => {
+                  setOffset(0);
+                  setSort(event.target.value);
+                }}
               >
                 <option value="name">Name</option>
                 <option value="warrior_time_ms">Warrior time</option>
@@ -189,16 +254,47 @@ export function App() {
               <button
                 className="secondary-action"
                 type="button"
-                onClick={() => setOrder((current) => (current === "asc" ? "desc" : "asc"))}
+                onClick={() => {
+                  setOffset(0);
+                  setOrder((current) => (current === "asc" ? "desc" : "asc"));
+                }}
               >
                 {order === "asc" ? "Asc" : "Desc"}
+              </button>
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setQuery("");
+                  setCategory("");
+                  setStatusFilter("all");
+                  setOffset(0);
+                }}
+              >
+                Reset
               </button>
               <button className="secondary-action" type="submit">
                 Search
               </button>
             </form>
           </div>
+          <StatusFilters
+            active={statusFilter}
+            meta={mapsMeta}
+            onChange={(next) => {
+              setOffset(0);
+              setStatusFilter(next);
+            }}
+          />
           <MapsTable maps={maps} />
+          <Pagination
+            disabled={maps.status !== "ok"}
+            limit={limit}
+            offset={offset}
+            total={maps.status === "ok" ? maps.total : 0}
+            onPage={(nextOffset) => setOffset(nextOffset)}
+          />
         </section>
       </main>
     </div>
@@ -250,7 +346,13 @@ function SyncMessage({ sync }: { sync: SyncState }) {
 
 function MapsTable({ maps }: { maps: MapsState }) {
   if (maps.status === "loading") {
-    return <div className="table-state">Loading maps...</div>;
+    return (
+      <div className="table-state skeleton-list">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <span key={index} />
+        ))}
+      </div>
+    );
   }
 
   if (maps.status === "error") {
@@ -267,8 +369,10 @@ function MapsTable({ maps }: { maps: MapsState }) {
         <thead>
           <tr>
             <th>Map</th>
-            <th>Campaign</th>
+            <th>Category</th>
             <th>Warrior</th>
+            <th>AT</th>
+            <th>WR</th>
             <th>Required pos.</th>
             <th>PB</th>
           </tr>
@@ -277,23 +381,112 @@ function MapsTable({ maps }: { maps: MapsState }) {
           {maps.items.map((map) => (
             <tr key={map.map_uid}>
               <td>
-                <strong>{map.name ?? "Unnamed map"}</strong>
+                <strong>{cleanTrackmaniaText(map.name) ?? "Unnamed map"}</strong>
                 <span>{map.author_name ?? map.map_uid}</span>
               </td>
               <td>
-                <strong>{map.category ?? "Unknown"}</strong>
+                <strong>
+                  <span className={`category-pill category-${(map.category ?? "unknown").toLowerCase()}`}>
+                    {map.category ?? "Unknown"}
+                  </span>
+                </strong>
                 <span>{map.campaign_name ?? "No campaign"}</span>
               </td>
               <td>{formatTime(map.warrior_time_ms)}</td>
+              <td>{formatTime(map.author_time_ms)}</td>
+              <td>{formatTime(map.world_record_time_ms)}</td>
               <td>
                 {map.required_position ? `#${map.required_position}` : "Not synced"}
-                {map.difficulty_tier ? <span>{map.difficulty_tier}</span> : null}
+                {map.difficulty_tier ? <span className="difficulty-pill">{map.difficulty_tier}</span> : null}
               </td>
-              <td>{map.pb_time_ms ? formatTime(map.pb_time_ms) : "No PB"}</td>
+              <td>
+                <span className={map.has_warrior ? "status-earned" : "status-muted"}>
+                  {map.pb_time_ms ? formatTime(map.pb_time_ms) : "No PB"}
+                </span>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function StatusFilters({
+  active,
+  meta,
+  onChange,
+}: {
+  active: string;
+  meta: MapsMetaState;
+  onChange: (status: string) => void;
+}) {
+  const filters = [
+    ["all", "All"],
+    ["earned", "Earned"],
+    ["missing", "Missing"],
+    ["close", "Close"],
+    ["not_played", "Not played"],
+  ];
+
+  const counts = meta.status === "ok" ? meta.data.status_counts : {};
+
+  return (
+    <div className="status-filters" aria-label="Map status filters">
+      {filters.map(([value, label]) => (
+        <button
+          className={active === value ? "active" : ""}
+          key={value}
+          type="button"
+          onClick={() => onChange(value)}
+        >
+          {label}
+          <span>{counts[value] ?? 0}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Pagination({
+  disabled,
+  limit,
+  offset,
+  total,
+  onPage,
+}: {
+  disabled: boolean;
+  limit: number;
+  offset: number;
+  total: number;
+  onPage: (offset: number) => void;
+}) {
+  const canGoBack = offset > 0;
+  const canGoNext = offset + limit < total;
+
+  return (
+    <div className="pagination">
+      <span>
+        Page {total === 0 ? 0 : Math.floor(offset / limit) + 1} of {Math.max(1, Math.ceil(total / limit))}
+      </span>
+      <div>
+        <button
+          className="secondary-action"
+          disabled={disabled || !canGoBack}
+          type="button"
+          onClick={() => onPage(Math.max(0, offset - limit))}
+        >
+          Previous
+        </button>
+        <button
+          className="secondary-action"
+          disabled={disabled || !canGoNext}
+          type="button"
+          onClick={() => onPage(offset + limit)}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
@@ -307,4 +500,16 @@ function formatTime(ms: number | null) {
   const seconds = Math.floor((ms % 60000) / 1000);
   const millis = ms % 1000;
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+}
+
+function cleanTrackmaniaText(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  return value
+    .replace(/\$[0-9a-fA-F]{3}/g, "")
+    .replace(/\$[a-zA-Z]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
