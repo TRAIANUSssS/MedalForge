@@ -104,3 +104,21 @@ Consequences:
 - Direct `POST /api/sync/warrior-data` is now the normal sync path.
 - The old `e416.dev` endpoint is no longer the default.
 - Local cache parsing remains useful for offline/debug sync.
+
+## 2026-05-06: Warrior Sync Is Cache-First
+
+Decision:
+
+- Warrior data import always parses `backend/data/raw/warrior_all.json`.
+- Normal sync first refreshes that file from the configured source URL, then parses it.
+
+Why:
+
+- The local raw file is the inspectable source of truth for backend parsing.
+- It makes debugging parser changes easier.
+- It keeps `use_cache=true` and normal sync behavior aligned.
+
+Consequences:
+
+- `POST /api/sync/warrior-data` means refresh cache and import.
+- `POST /api/sync/warrior-data?use_cache=true` means import existing cache only.

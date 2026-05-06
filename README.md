@@ -68,5 +68,5 @@ http://localhost:5173
 Sprint 2 is using the GitHub raw Warrior data source:
 
 - `https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json`
-- normal sync: `POST /api/sync/warrior-data`
-- raw cache fallback: `POST /api/sync/warrior-data?use_cache=true`
+- normal sync: `POST /api/sync/warrior-data` downloads into `backend/data/raw/warrior_all.json`, then parses that local file
+- raw cache fallback: `POST /api/sync/warrior-data?use_cache=true` parses the existing local file without downloading

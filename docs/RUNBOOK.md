@@ -75,6 +75,15 @@ Normal sync:
 Invoke-RestMethod -Method Post http://localhost:8000/api/sync/warrior-data
 ```
 
+Normal sync flow:
+
+```text
+1. Download https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json
+2. Write backend/data/raw/warrior_all.json
+3. Parse backend/data/raw/warrior_all.json
+4. Upsert rows into SQLite
+```
+
 Parse an existing raw cache instead of calling the external endpoint:
 
 ```powershell

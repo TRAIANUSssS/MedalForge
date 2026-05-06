@@ -41,13 +41,10 @@ def sync_warrior_data(db: Session, settings: Settings, *, use_cache: bool = Fals
     job = create_sync_job(db, "warrior_data")
 
     try:
-        if use_cache:
-            payload = load_cached_warrior_payload()
-        else:
-            payload = fetch_warrior_payload(settings)
-            RAW_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-            RAW_CACHE_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        if not use_cache:
+            refresh_warrior_cache(settings)
 
+        payload = load_cached_warrior_payload()
         result = upsert_warrior_maps(db, payload)
         status = "success" if result["items_failed"] == 0 else "partial"
         finish_sync_job(
@@ -71,6 +68,13 @@ def sync_warrior_data(db: Session, settings: Settings, *, use_cache: bool = Fals
             error_message=str(exc),
         )
         raise
+
+
+def refresh_warrior_cache(settings: Settings) -> Path:
+    payload = fetch_warrior_payload(settings)
+    RAW_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    RAW_CACHE_PATH.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return RAW_CACHE_PATH
 
 
 def fetch_warrior_payload(settings: Settings) -> Any:

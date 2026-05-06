@@ -72,6 +72,7 @@ Preferred order:
 Principles:
 
 - cache raw external responses;
+- parse Warrior data from the local raw cache after refresh;
 - parse defensively;
 - support parsing from local cache when the external source is unavailable;
 - store partial results when possible;

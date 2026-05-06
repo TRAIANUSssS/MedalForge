@@ -23,7 +23,7 @@ Response:
 
 ### POST /api/sync/warrior-data
 
-Fetches Warrior medal source data, saves raw JSON, parses maps, and upserts `warrior_maps`.
+Refreshes the local Warrior raw cache from the configured source, then parses the local cache and upserts `warrior_maps`.
 
 Query params:
 
@@ -31,12 +31,18 @@ Query params:
 use_cache=false
 ```
 
-If `use_cache=true`, backend parses `backend/data/raw/warrior_all.json` instead of calling the external endpoint.
+If `use_cache=true`, backend skips the remote refresh and only parses `backend/data/raw/warrior_all.json`.
 
 Source:
 
 ```text
 https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json
+```
+
+Cache path:
+
+```text
+backend/data/raw/warrior_all.json
 ```
 
 ### GET /api/maps

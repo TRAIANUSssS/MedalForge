@@ -24,7 +24,7 @@ Current focus:
 | Step | Status | Result | Verification |
 | --- | --- | --- | --- |
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
-| Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | GitHub raw source imports 4559 unique maps |
+| Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Sync refreshes local cache, then imports 4559 unique maps |
 | Sprint 3: Maps table UI | Started | Basic table, search, sorting, sync buttons, loading/error states | Frontend can browse local maps from `GET /api/maps` |
 | Sprint 4: Warrior positions | Pending | Nadeo Live service, required position, difficulty tier | Maps have `required_position` |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
@@ -99,6 +99,12 @@ Warrior source:
 - `https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json`
 - The old `https://e416.dev/api3/tm/warrior/all` endpoint returns `401` for a normal backend request.
 
+Data flow:
+
+- Normal sync downloads the GitHub raw JSON into `backend/data/raw/warrior_all.json`.
+- Import/parsing reads from `backend/data/raw/warrior_all.json`.
+- `use_cache=true` skips the download and only parses the existing local file.
+
 Local cache result:
 
 - `docs/warrior.json` contains 4561 medal objects.
@@ -108,8 +114,8 @@ Local cache result:
 
 Next practical step:
 
-1. Use direct `POST /api/sync/warrior-data` as the normal sync path.
-2. Keep `POST /api/sync/warrior-data?use_cache=true` as a fallback/debug path.
+1. Use `POST /api/sync/warrior-data` as the normal refresh-cache-and-import path.
+2. Keep `POST /api/sync/warrior-data?use_cache=true` as a local-cache-only fallback/debug path.
 3. Continue with Sprint 3 polish for the maps table UI.
 
 Definition of done remains:
