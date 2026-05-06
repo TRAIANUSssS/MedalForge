@@ -132,9 +132,9 @@ export function App() {
       });
   }
 
-  function handlePositionSync() {
+  function handlePositionSync(options: { limit?: number; fallbackTop?: boolean } = {}) {
     setPositionSync({ status: "running" });
-    syncWarriorPositions()
+    syncWarriorPositions(options)
       .then((result) => {
         setPositionSync({ status: "ok", result });
         void loadMaps();
@@ -220,9 +220,17 @@ export function App() {
               className="secondary-action"
               disabled={positionSync.status === "running"}
               type="button"
-              onClick={handlePositionSync}
+              onClick={() => handlePositionSync()}
             >
               {positionSync.status === "running" ? "Syncing positions..." : "Sync positions"}
+            </button>
+            <button
+              className="secondary-action"
+              disabled={positionSync.status === "running"}
+              type="button"
+              onClick={() => handlePositionSync({ limit: 5, fallbackTop: true })}
+            >
+              Test top fallback
             </button>
           </div>
         </section>

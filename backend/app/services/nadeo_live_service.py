@@ -16,7 +16,12 @@ from app.repositories.sync_repository import create_sync_job, finish_sync_job
 
 
 LEADERBOARD_POSITION_URL = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/map"
+LEADERBOARD_TOP_URL_TEMPLATE = (
+    "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/{map_uid}/top"
+)
 WARRIOR_POSITION_BATCH_SIZE = 50
+TOP_FALLBACK_PAGE_SIZE = 100
+TOP_FALLBACK_MAX_OFFSET = 9_900
 
 
 class NadeoLiveConfigError(RuntimeError):
@@ -29,7 +34,13 @@ class PositionRequestItem:
     score_ms: int
 
 
-def sync_warrior_positions(db: Session, settings: Settings, *, limit: int | None = None) -> dict[str, Any]:
+def sync_warrior_positions(
+    db: Session,
+    settings: Settings,
+    *,
+    limit: int | None = None,
+    fallback_top: bool = False,
+) -> dict[str, Any]:
     job = create_sync_job(db, "warrior_positions")
 
     try:
@@ -47,6 +58,8 @@ def sync_warrior_positions(db: Session, settings: Settings, *, limit: int | None
             try:
                 payload = fetch_positions_batch(settings, batch)
                 positions = extract_positions(payload)
+                if fallback_top:
+                    positions.update(fetch_missing_positions_from_top(settings, batch, positions))
                 now = datetime.now(timezone.utc)
 
                 for item in batch:
@@ -148,6 +161,101 @@ def fetch_positions_batch(settings: Settings, batch: list[PositionRequestItem]) 
         return response.json()
 
 
+def fetch_missing_positions_from_top(
+    settings: Settings,
+    batch: list[PositionRequestItem],
+    positions: dict[str, int],
+) -> dict[str, int]:
+    found: dict[str, int] = {}
+    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+        for item in batch:
+            if item.map_uid in positions:
+                continue
+            position = fetch_position_from_top(client, settings, item)
+            if position is not None:
+                found[item.map_uid] = position
+    return found
+
+
+def fetch_position_from_top(
+    client: httpx.Client,
+    settings: Settings,
+    item: PositionRequestItem,
+) -> int | None:
+    headers = {"Authorization": format_nadeo_authorization(settings.nadeo_live_token or "")}
+    url = LEADERBOARD_TOP_URL_TEMPLATE.format(map_uid=item.map_uid)
+
+    low_page = 0
+    high_page = TOP_FALLBACK_MAX_OFFSET // TOP_FALLBACK_PAGE_SIZE
+    candidate_page: list[dict[str, Any]] | None = None
+
+    while low_page <= high_page:
+        mid_page = (low_page + high_page) // 2
+        offset = mid_page * TOP_FALLBACK_PAGE_SIZE
+        page = fetch_top_page(client, url, headers, offset)
+        if not page:
+            high_page = mid_page - 1
+            continue
+
+        first_score = page[0].get("score")
+        last_score = page[-1].get("score")
+        if not isinstance(first_score, int) or not isinstance(last_score, int):
+            return None
+
+        if item.score_ms < first_score:
+            high_page = mid_page - 1
+        elif item.score_ms >= last_score:
+            low_page = mid_page + 1
+            candidate_page = page
+        else:
+            candidate_page = page
+            break
+
+    if candidate_page is None:
+        return None
+
+    last_record = candidate_page[-1]
+    if (
+        last_record.get("position") == TOP_FALLBACK_MAX_OFFSET + TOP_FALLBACK_PAGE_SIZE
+        and isinstance(last_record.get("score"), int)
+        and item.score_ms > last_record["score"]
+    ):
+        return None
+
+    last_position_at_or_below_score: int | None = None
+    for record in candidate_page:
+        score = record.get("score")
+        position = record.get("position")
+        if not isinstance(score, int) or not isinstance(position, int):
+            continue
+        if score <= item.score_ms:
+            last_position_at_or_below_score = position
+        else:
+            break
+
+    return last_position_at_or_below_score
+
+
+def fetch_top_page(
+    client: httpx.Client,
+    url: str,
+    headers: dict[str, str],
+    offset: int,
+) -> list[dict[str, Any]]:
+    response = client.get(url, params={"onlyWorld": "true", "length": TOP_FALLBACK_PAGE_SIZE, "offset": offset}, headers=headers)
+    response.raise_for_status()
+    payload = response.json()
+    if not isinstance(payload, dict):
+        return []
+    tops = payload.get("tops")
+    if not isinstance(tops, list) or not tops:
+        return []
+    if not isinstance(tops[0], dict):
+        return []
+    world_top = tops[0].get("top")
+    return [item for item in world_top if isinstance(item, dict)] if isinstance(world_top, list) else []
+
+
 def format_nadeo_authorization(token: str) -> str:
     token = token.strip()
     if token.startswith("nadeo_v1"):
@@ -165,9 +273,12 @@ def _walk_position_payload(value: Any, found: dict[str, int]) -> None:
     if isinstance(value, dict):
         map_uid = _first_str(value, "mapUid", "map_uid", "uid")
         position = _first_int(value, "position", "rank", "worldPosition", "world_position")
+        zone_position = _position_from_zones(value.get("zones"))
 
         if map_uid and position is not None:
             found[map_uid] = position
+        elif map_uid and zone_position is not None:
+            found[map_uid] = zone_position
 
         for key, nested in value.items():
             if isinstance(nested, dict):
@@ -178,6 +289,27 @@ def _walk_position_payload(value: Any, found: dict[str, int]) -> None:
     elif isinstance(value, list):
         for item in value:
             _walk_position_payload(item, found)
+
+
+def _position_from_zones(zones: Any) -> int | None:
+    if not isinstance(zones, list):
+        return None
+
+    first_position: int | None = None
+    for zone in zones:
+        if not isinstance(zone, dict):
+            continue
+        ranking = zone.get("ranking")
+        if not isinstance(ranking, dict):
+            continue
+        position = _first_int(ranking, "position", "rank", "worldPosition", "world_position")
+        if position is None:
+            continue
+        if first_position is None:
+            first_position = position
+        if zone.get("zoneName") == "World":
+            return position
+    return first_position
 
 
 def looks_like_map_uid(value: str) -> bool:

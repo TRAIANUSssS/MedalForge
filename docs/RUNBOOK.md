@@ -118,6 +118,12 @@ Smoke test a small batch:
 Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5"
 ```
 
+Smoke test with top leaderboard fallback:
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5&fallback_top=true"
+```
+
 Full sync:
 
 ```powershell
@@ -130,11 +136,18 @@ Behavior:
 1. Read maps with map_uid and warrior_time_ms from SQLite
 2. Batch maps by 50
 3. Call Nadeo Live leaderboard position endpoint
-4. Upsert position_type=warrior into map_positions
-5. GET /api/maps shows required_position and difficulty_tier
+4. Optionally derive missing positions from `top` leaderboard when `fallback_top=true`
+5. Upsert position_type=warrior into map_positions
+6. GET /api/maps shows required_position and difficulty_tier
 ```
 
 If `NADEO_LIVE_TOKEN` is missing, the backend returns `400`.
+
+Current Nadeo behavior observed with the user token:
+
+- `top` leaderboard endpoint works.
+- batch position endpoint returns `[]`.
+- `fallback_top=true` successfully populated positions for a 5-map smoke test.
 
 ## Local Files
 

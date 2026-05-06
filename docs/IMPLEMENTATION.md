@@ -26,7 +26,7 @@ Current focus:
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
 | Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Sync refreshes local cache, then imports 4559 unique maps |
 | Sprint 3: Maps table UI | Done | Category/status filters, search submit/reset, sorting, pagination, skeleton/error/empty states, cleaned TM text | Frontend can browse and filter 4559 local maps |
-| Sprint 4: Warrior positions | In progress | Nadeo Live service, batched sync endpoint, map position upsert, frontend sync action | Code ready; needs real `NADEO_LIVE_TOKEN` smoke test |
+| Sprint 4: Warrior positions | In progress | Nadeo Live service, batched sync endpoint, top fallback, map position upsert, frontend sync action | `fallback_top=true` smoke test populated 5 positions |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
 | Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
 
@@ -174,6 +174,7 @@ Implemented:
 - `nadeo_live_service.py` for Nadeo Live leaderboard position calls.
 - `POST /api/sync/warrior-positions`.
 - Batch size: 50 maps per Nadeo Live request.
+- Optional `fallback_top=true` derives missing positions from the first 10,000 rows of the `top` leaderboard.
 - Reads `NADEO_LIVE_TOKEN` from backend `.env`.
 - Saves rows into `map_positions`:
   - `position_type = "warrior"`;
@@ -182,16 +183,21 @@ Implemented:
 - Maps API already exposes:
   - `required_position`;
   - `difficulty_tier`.
-- Frontend has a `Sync positions` action and result/error message.
+- Frontend has `Sync positions`, `Test top fallback`, and result/error messages.
 
-Needs verification with real token:
+Verified with real token:
 
 ```powershell
-Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5"
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5&fallback_top=true"
 ```
 
-Expected result:
+Result:
 
-- positions are inserted into `map_positions`;
-- maps table starts showing required position;
+- positions were inserted into `map_positions`;
+- maps table started showing required position;
 - difficulty tier is computed from required position.
+
+Open issue:
+
+- batch position endpoint returns `[]` with the current user token, even though the `top` endpoint works.
+- Full `fallback_top=true` sync may be slow because it can require many leaderboard calls.

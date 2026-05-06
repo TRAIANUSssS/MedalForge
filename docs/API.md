@@ -104,9 +104,11 @@ Query params:
 
 ```text
 limit=optional integer
+fallback_top=false
 ```
 
 `limit` is useful for token/API smoke tests before running all maps.
+`fallback_top=true` tries to derive missing positions from the first 10,000 rows of the `top` leaderboard. This is useful for debugging and hard maps, but it may require many API calls for large syncs.
 
 Requires backend `.env`:
 
@@ -133,7 +135,8 @@ Notes:
 
 - maps are batched by 50 per Nadeo Live request;
 - position rows are stored in `map_positions` with `position_type = "warrior"`;
-- missing `NADEO_LIVE_TOKEN` returns `400`.
+- missing `NADEO_LIVE_TOKEN` returns `400`;
+- the batch position endpoint may return an empty list for the current user token; `fallback_top=true` is available as a slower fallback.
 
 ## Planned MVP Endpoints
 

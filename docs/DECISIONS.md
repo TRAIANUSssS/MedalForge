@@ -139,3 +139,21 @@ Consequences:
 
 - `POST /api/sync/warrior-positions?limit=5` is available for smoke testing.
 - Full sync may take many API calls and should remain a manual action in MVP.
+
+## 2026-05-06: Add Top Leaderboard Fallback For Positions
+
+Decision:
+
+- Add `fallback_top=true` to `POST /api/sync/warrior-positions`.
+
+Why:
+
+- The documented batch position endpoint currently returns `[]` for the user token.
+- The `top` leaderboard endpoint works with the same token.
+- The fallback can populate positions when Warrior time is within the first 10,000 leaderboard rows.
+
+Consequences:
+
+- `fallback_top=true` is useful for smoke tests and hard maps.
+- It is not a perfect replacement for the batch position endpoint because easy maps may require positions beyond the visible top 10,000.
+- Full fallback sync can be slow and should be run deliberately.

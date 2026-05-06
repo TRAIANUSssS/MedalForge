@@ -57,9 +57,12 @@ export async function syncWarriorData(useCache = false): Promise<WarriorSyncResp
   return request<WarriorSyncResponse>(`/api/sync/warrior-data${query}`, { method: "POST" });
 }
 
-export async function syncWarriorPositions(limit?: number): Promise<PositionSyncResponse> {
-  const query = limit ? `?limit=${limit}` : "";
-  return request<PositionSyncResponse>(`/api/sync/warrior-positions${query}`, { method: "POST" });
+export async function syncWarriorPositions(options: { limit?: number; fallbackTop?: boolean } = {}): Promise<PositionSyncResponse> {
+  const query = new URLSearchParams();
+  if (options.limit) query.set("limit", String(options.limit));
+  if (options.fallbackTop) query.set("fallback_top", "true");
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request<PositionSyncResponse>(`/api/sync/warrior-positions${suffix}`, { method: "POST" });
 }
 
 export async function getMaps(params: {
