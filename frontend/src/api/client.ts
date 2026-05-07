@@ -19,6 +19,21 @@ export type PositionSyncResponse = WarriorSyncResponse & {
   over_10000: number;
 };
 
+export type PlayerPbSyncResponse = WarriorSyncResponse & {
+  history_inserted: number;
+  snapshots_inserted: number;
+};
+
+export type TrackmaniaAuthStatusResponse = {
+  connected: boolean;
+  expires_at: string | null;
+  has_refresh_token: boolean;
+  scopes: string[];
+  account_id: string | null;
+  display_name: string | null;
+  last_error: string | null;
+};
+
 export type MapListItem = {
   map_uid: string;
   map_id: string | null;
@@ -83,6 +98,25 @@ export async function syncWarriorPositions(options: { limit?: number; force?: bo
   return request<PositionSyncResponse>(`/api/sync/warrior-positions${suffix}`, { method: "POST" });
 }
 
+export async function syncPlayerPbs(options: { limit?: number } = {}): Promise<PlayerPbSyncResponse> {
+  const query = new URLSearchParams();
+  if (options.limit) query.set("limit", String(options.limit));
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request<PlayerPbSyncResponse>(`/api/sync/player-pbs${suffix}`, { method: "POST" });
+}
+
+export async function startTrackmaniaAuth(): Promise<{ authorize_url: string }> {
+  return request<{ authorize_url: string }>("/api/auth/trackmania/start");
+}
+
+export async function getTrackmaniaAuthStatus(): Promise<TrackmaniaAuthStatusResponse> {
+  return request<TrackmaniaAuthStatusResponse>("/api/auth/trackmania/status");
+}
+
+export async function disconnectTrackmaniaAuth(): Promise<{ status: string }> {
+  return request<{ status: string }>("/api/auth/trackmania/disconnect", { method: "POST" });
+}
+
 export async function getMaps(params: {
   status?: string;
   category?: string;
@@ -119,9 +153,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     let message = `${response.status} ${response.statusText}`;
     try {
-      const body = (await response.json()) as { detail?: string };
-      if (body.detail) {
+      const body = (await response.json()) as { detail?: string | { message?: string } };
+      if (typeof body.detail === "string") {
         message = body.detail;
+      } else if (body.detail?.message) {
+        message = body.detail.message;
       }
     } catch {
       // Keep the HTTP status message when the backend did not return JSON.

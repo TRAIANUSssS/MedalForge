@@ -21,6 +21,7 @@ Sprint 1 scaffold:
 - Sprint 3 maps table: category/status filters, search, sorting, pagination
 - Sprint 4 started: `POST /api/sync/warrior-positions` for Nadeo Live required positions
 - Sprint 4.1 positions: `/top`-only sync, exact positions, `10k+` placeholder, progress display
+- Sprint 5 player PB sync: Trackmania OAuth, `POST /api/sync/player-pbs`, PB history, progress snapshots
 
 ## Backend
 
@@ -74,8 +75,18 @@ http://localhost:5173
 
 ## Next Step
 
-Sprint 2 is using the GitHub raw Warrior data source:
+Current sync sources:
 
 - `https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json`
 - normal sync: `POST /api/sync/warrior-data` downloads into `backend/data/raw/warrior_all.json`, then parses that local file
 - raw cache fallback: `POST /api/sync/warrior-data?use_cache=true` parses the existing local file without downloading
+- position sync: `POST /api/sync/warrior-positions` uses `NADEO_LIVE_TOKEN`
+- player PB sync: connect through Trackmania OAuth, then `POST /api/sync/player-pbs`
+
+Trackmania OAuth requires a registered app at `https://api.trackmania.com`:
+
+```env
+TRACKMANIA_CLIENT_ID=...
+TRACKMANIA_CLIENT_SECRET=...
+TRACKMANIA_REDIRECT_URI=http://localhost:8000/api/auth/trackmania/callback
+```

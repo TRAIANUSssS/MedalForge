@@ -5,13 +5,19 @@ import {
   getLatestSyncJob,
   getMaps,
   getMapsMeta,
+  getTrackmaniaAuthStatus,
+  disconnectTrackmaniaAuth,
+  startTrackmaniaAuth,
   syncWarriorData,
+  syncPlayerPbs,
   syncWarriorPositions,
   type HealthResponse,
   type MapListItem,
   type MapsMetaResponse,
+  type PlayerPbSyncResponse,
   type PositionSyncResponse,
   type SyncJobResponse,
+  type TrackmaniaAuthStatusResponse,
   type WarriorSyncResponse,
 } from "../api/client";
 
@@ -42,6 +48,17 @@ type PositionSyncState =
   | { status: "ok"; result: PositionSyncResponse }
   | { status: "error"; message: string };
 
+type PlayerPbSyncState =
+  | { status: "idle" }
+  | { status: "running" }
+  | { status: "ok"; result: PlayerPbSyncResponse }
+  | { status: "error"; message: string };
+
+type TrackmaniaAuthState =
+  | { status: "loading" }
+  | { status: "ok"; data: TrackmaniaAuthStatusResponse }
+  | { status: "error"; message: string };
+
 type PositionProgress = {
   processed: number;
   total: number;
@@ -60,6 +77,8 @@ export function App() {
   const [mapsMeta, setMapsMeta] = useState<MapsMetaState>({ status: "loading" });
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [positionSync, setPositionSync] = useState<PositionSyncState>({ status: "idle" });
+  const [playerPbSync, setPlayerPbSync] = useState<PlayerPbSyncState>({ status: "idle" });
+  const [trackmaniaAuth, setTrackmaniaAuth] = useState<TrackmaniaAuthState>({ status: "loading" });
   const [positionProgress, setPositionProgress] = useState<PositionProgress | null>(null);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
@@ -97,6 +116,7 @@ export function App() {
 
   useEffect(() => {
     void loadMapsMeta();
+    void loadTrackmaniaAuthStatus();
   }, []);
 
   useEffect(() => {
@@ -156,6 +176,38 @@ export function App() {
       });
   }
 
+  function loadTrackmaniaAuthStatus() {
+    setTrackmaniaAuth({ status: "loading" });
+    return getTrackmaniaAuthStatus()
+      .then((data) => {
+        setTrackmaniaAuth({ status: "ok", data });
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown Trackmania auth error";
+        setTrackmaniaAuth({ status: "error", message });
+      });
+  }
+
+  function handleTrackmaniaConnect() {
+    startTrackmaniaAuth()
+      .then((result) => {
+        window.location.href = result.authorize_url;
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown Trackmania auth error";
+        setTrackmaniaAuth({ status: "error", message });
+      });
+  }
+
+  function handleTrackmaniaDisconnect() {
+    disconnectTrackmaniaAuth()
+      .then(() => loadTrackmaniaAuthStatus())
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown Trackmania auth error";
+        setTrackmaniaAuth({ status: "error", message });
+      });
+  }
+
   function handleSync(useCache = false) {
     setSync({ status: "running" });
     syncWarriorData(useCache)
@@ -194,7 +246,24 @@ export function App() {
       });
   }
 
+  function handlePlayerPbSync(options: { limit?: number } = {}) {
+    setPlayerPbSync({ status: "running" });
+    syncPlayerPbs(options)
+      .then((result) => {
+        setPlayerPbSync({ status: "ok", result });
+        setOffset(0);
+        void loadMapsMeta();
+        void loadMaps();
+      })
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : "Unknown PB sync error";
+        setPlayerPbSync({ status: "error", message });
+      });
+  }
+
   const totalMaps = maps.status === "ok" ? maps.total : 0;
+  const earnedCount = mapsMeta.status === "ok" ? mapsMeta.data.status_counts.earned ?? 0 : 0;
+  const closeCount = mapsMeta.status === "ok" ? mapsMeta.data.status_counts.close ?? 0 : 0;
   const pageStart = maps.status === "ok" && maps.total > 0 ? offset + 1 : 0;
   const pageEnd = maps.status === "ok" ? Math.min(offset + limit, maps.total) : 0;
 
@@ -233,9 +302,13 @@ export function App() {
 
         <section className="summary-grid" aria-label="MVP progress placeholders">
           <MetricCard label="Warrior maps" value={String(totalMaps)} detail="Stored locally" />
-          <MetricCard label="Earned medals" value="0" detail="PB sync not configured yet" />
-          <MetricCard label="Close medals" value="0" detail="Needs player records" />
-          <MetricCard label="Snapshots" value="0" detail="Created after PB sync" />
+          <MetricCard label="Earned medals" value={String(earnedCount)} detail="From current PB records" />
+          <MetricCard label="Close medals" value={String(closeCount)} detail="Within 1 second" />
+          <MetricCard
+            label="Snapshots"
+            value={playerPbSync.status === "ok" ? String(playerPbSync.result.snapshots_inserted) : "0"}
+            detail="Created after PB sync"
+          />
         </section>
 
         <section className="content-panel sync-panel">
@@ -247,6 +320,7 @@ export function App() {
             </p>
             <SyncMessage sync={sync} />
             <PositionSyncMessage sync={positionSync} progress={positionProgress} />
+            <PlayerPbSyncMessage sync={playerPbSync} />
           </div>
           <div className="sync-actions">
             <button
@@ -280,6 +354,53 @@ export function App() {
               onClick={() => handlePositionSync({ limit: 5, force: true })}
             >
               Test top sync
+            </button>
+            <button
+              className="secondary-action"
+              disabled={
+                playerPbSync.status === "running" ||
+                trackmaniaAuth.status !== "ok" ||
+                !trackmaniaAuth.data.connected
+              }
+              type="button"
+              onClick={() => handlePlayerPbSync({ limit: 10 })}
+            >
+              Test PB sync
+            </button>
+          </div>
+        </section>
+
+        <section className="content-panel auth-panel">
+          <div>
+            <h3>Trackmania Account</h3>
+            <TrackmaniaAuthStatus auth={trackmaniaAuth} />
+          </div>
+          <div className="sync-actions">
+            <button className="primary-action" type="button" onClick={handleTrackmaniaConnect}>
+              Connect Trackmania account
+            </button>
+            <button className="secondary-action" type="button" onClick={() => void loadTrackmaniaAuthStatus()}>
+              Check connection
+            </button>
+            <button
+              className="secondary-action"
+              disabled={trackmaniaAuth.status !== "ok" || !trackmaniaAuth.data.connected}
+              type="button"
+              onClick={handleTrackmaniaDisconnect}
+            >
+              Disconnect
+            </button>
+            <button
+              className="secondary-action"
+              disabled={
+                playerPbSync.status === "running" ||
+                trackmaniaAuth.status !== "ok" ||
+                !trackmaniaAuth.data.connected
+              }
+              type="button"
+              onClick={() => handlePlayerPbSync()}
+            >
+              {playerPbSync.status === "running" ? "Syncing PBs..." : "Sync My PBs"}
             </button>
           </div>
         </section>
@@ -454,6 +575,56 @@ function PositionSyncMessage({ sync, progress }: { sync: PositionSyncState; prog
     <p className="sync-message ok">
       Positions {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
       {sync.result.skipped} skipped, {sync.result.exact} exact, {sync.result.over_10000} over 10k.
+    </p>
+  );
+}
+
+function PlayerPbSyncMessage({ sync }: { sync: PlayerPbSyncState }) {
+  if (sync.status === "idle") {
+    return null;
+  }
+
+  if (sync.status === "running") {
+    return <p className="sync-message">Player PB sync is running...</p>;
+  }
+
+  if (sync.status === "error") {
+    return <p className="sync-message error">PB sync failed: {sync.message}</p>;
+  }
+
+  return (
+    <p className="sync-message ok">
+      PBs {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
+      {sync.result.skipped} unchanged, {sync.result.history_inserted} history rows,{" "}
+      {sync.result.snapshots_inserted} snapshot.
+    </p>
+  );
+}
+
+function TrackmaniaAuthStatus({ auth }: { auth: TrackmaniaAuthState }) {
+  if (auth.status === "loading") {
+    return <p>Checking Trackmania connection...</p>;
+  }
+
+  if (auth.status === "error") {
+    return <p className="sync-message error">{auth.message}</p>;
+  }
+
+  if (!auth.data.connected) {
+    return (
+      <p>
+        Disconnected. Connect your Trackmania account to sync personal bests through the official
+        Trackmania OAuth API.
+        {auth.data.last_error ? <span className="auth-error"> {auth.data.last_error}</span> : null}
+      </p>
+    );
+  }
+
+  return (
+    <p>
+      Connected{auth.data.display_name ? ` as ${auth.data.display_name}` : ""}.
+      {auth.data.expires_at ? ` Access token expires ${formatDateTime(auth.data.expires_at)}.` : null}
+      {auth.data.has_refresh_token ? " Refresh token stored locally." : " Reconnect required when token expires."}
     </p>
   );
 }
@@ -642,6 +813,13 @@ function formatTime(ms: number | null) {
   const seconds = Math.floor((ms % 60000) / 1000);
   const millis = ms % 1000;
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function formatPosition(map: MapListItem) {

@@ -165,11 +165,107 @@ During position sync, `details_json` includes live progress:
 }
 ```
 
-## Planned MVP Endpoints
+### GET /api/auth/trackmania/start
+
+Starts Trackmania OAuth authorization and returns an authorize URL.
+
+Response:
+
+```json
+{
+  "authorize_url": "https://api.trackmania.com/oauth/authorize?..."
+}
+```
+
+Requires backend `.env`:
+
+```env
+TRACKMANIA_CLIENT_ID=...
+TRACKMANIA_CLIENT_SECRET=...
+TRACKMANIA_REDIRECT_URI=http://localhost:8000/api/auth/trackmania/callback
+```
+
+### GET /api/auth/trackmania/callback
+
+OAuth callback for Trackmania authorization.
+
+Query params:
+
+```text
+code=...
+state=...
+```
+
+The backend validates `state`, exchanges the code for tokens, stores tokens locally in SQLite, and
+returns a simple HTML success page.
+
+### GET /api/auth/trackmania/status
+
+Returns local Trackmania connection status without exposing tokens.
+
+Response:
+
+```json
+{
+  "connected": true,
+  "expires_at": "2026-05-07T20:00:00Z",
+  "has_refresh_token": true,
+  "scopes": ["read_favorite"],
+  "account_id": "...",
+  "display_name": "Player",
+  "last_error": null
+}
+```
+
+### POST /api/auth/trackmania/disconnect
+
+Deletes locally stored Trackmania OAuth tokens. It does not delete synced player records.
 
 ### POST /api/sync/player-pbs
 
-Uses Nadeo Core API to fetch current player PBs.
+Uses the official Trackmania OAuth API to fetch current player PBs for local Warrior maps.
+
+Query params:
+
+```text
+limit=optional integer
+```
+
+`limit` is useful for token/API smoke tests before syncing all maps.
+
+Requires a connected Trackmania account. The OAuth app is configured through backend `.env`:
+
+```text
+TRACKMANIA_CLIENT_ID=...
+TRACKMANIA_CLIENT_SECRET=...
+```
+
+Response:
+
+```json
+{
+  "job_id": 2,
+  "status": "success",
+  "items_total": 4559,
+  "items_success": 1200,
+  "items_failed": 0,
+  "inserted": 1000,
+  "updated": 200,
+  "skipped": 300,
+  "history_inserted": 250,
+  "snapshots_inserted": 1
+}
+```
+
+Notes:
+
+- `https://api.trackmania.com/api/user/map-records` is queried in batches of 25 map IDs;
+- current PBs are stored in `player_records`;
+- PB history rows are created only when a PB is first seen or changes;
+- each sync creates one aggregate `progress_snapshots` row;
+- missing/expired Trackmania OAuth connection returns `400`.
+
+## Planned MVP Endpoints
 
 ### GET /api/stats/summary
 

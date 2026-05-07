@@ -170,6 +170,79 @@ Stopping a running sync:
 - The current `sync_jobs` row may remain `running` because there is no cancellation endpoint yet.
 - Normal next sync skips already saved `exact` and `over_10000` rows, so it can continue from the remaining maps.
 
+## Trackmania OAuth
+
+Player PB sync uses the official Trackmania OAuth API, not Ubisoft password auth and not
+`NADEO_CORE_TOKEN`.
+
+Required config:
+
+```text
+TRACKMANIA_CLIENT_ID=...
+TRACKMANIA_CLIENT_SECRET=...
+TRACKMANIA_REDIRECT_URI=http://localhost:8000/api/auth/trackmania/callback
+```
+
+Create an OAuth application at:
+
+```text
+https://api.trackmania.com
+```
+
+Use this redirect URI when registering the app:
+
+```text
+http://localhost:8000/api/auth/trackmania/callback
+```
+
+Connection status:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/auth/trackmania/status
+```
+
+Start connection from the browser/frontend, or get the authorize URL manually:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/auth/trackmania/start
+```
+
+Disconnect local OAuth tokens:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/auth/trackmania/disconnect
+```
+
+Tokens are stored in local SQLite table `auth_tokens` and are never returned by the API.
+
+## Player PB Sync
+
+Smoke test:
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/player-pbs?limit=10"
+```
+
+Full sync:
+
+```powershell
+Invoke-RestMethod -Method Post http://localhost:8000/api/sync/player-pbs
+```
+
+Behavior:
+
+```text
+1. Refresh Trackmania OAuth access token if needed
+2. Read Warrior maps with map_id from SQLite
+3. Request https://api.trackmania.com/api/user/map-records with mapId[] batches of 25
+4. Upsert matching PBs into player_records
+5. Write player_record_history for first-seen or changed PBs
+6. Create one progress_snapshots row after a successful sync
+7. GET /api/maps shows PB time, has_warrior, and diff_to_warrior_ms
+```
+
+The official API limit observed during implementation is 25 map IDs per request.
+
 ## Local Files
 
 Ignored local files:
@@ -198,14 +271,24 @@ VITE_API_BASE_URL=http://localhost:8000
 
 Start the backend or run `init_db()`. The app creates `backend/data/app.db` on startup.
 
-### Nadeo sync fails
+### Nadeo position sync fails
 
-For MVP, tokens are read from `backend/.env`. Check:
+Warrior position sync still uses Nadeo Live. Check:
 
 ```text
-NADEO_ACCOUNT_ID=
-NADEO_CORE_TOKEN=
 NADEO_LIVE_TOKEN=
 ```
 
 Do not commit real token values.
+
+### Player PB sync fails
+
+Check Trackmania OAuth status:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/api/auth/trackmania/status
+```
+
+If `connected=false`, reconnect from the frontend Trackmania Account panel. If the OAuth app config
+is missing, add `TRACKMANIA_CLIENT_ID` and `TRACKMANIA_CLIENT_SECRET` to `backend/.env`, then restart
+the backend.

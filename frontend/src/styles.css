@@ -204,6 +204,10 @@ button {
   margin-bottom: 18px;
 }
 
+.auth-panel {
+  margin-bottom: 18px;
+}
+
 .content-panel h3,
 .content-panel p {
   margin: 0;
@@ -281,6 +285,11 @@ button {
 
 .sync-message.error {
   color: #8f2d2f;
+}
+
+.auth-error {
+  color: #8f2d2f;
+  font-weight: 800;
 }
 
 .maps-panel {

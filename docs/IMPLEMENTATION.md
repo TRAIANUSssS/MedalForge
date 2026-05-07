@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 5: Player PB sync.
+- Sprint 6: Dashboard MVP.
 
 ## Stage Checklist
 
@@ -28,7 +28,7 @@ Current focus:
 | Sprint 3: Maps table UI | Done | Category/status filters, search submit/reset, sorting, pagination, skeleton/error/empty states, cleaned TM text | Frontend can browse and filter 4559 local maps |
 | Sprint 4: Warrior positions | Superseded | Batch position endpoint returned `[]`; moved to `/top`-only strategy | See Sprint 4.1 |
 | Sprint 4.1: Top-only position sync | Done | Use `/top` only, store exact/10k+ status, avoid re-syncing stable over_10000 rows, show progress | Full position sync completed successfully |
-| Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
+| Sprint 5: Player PB sync | Done | Trackmania OAuth, official map-records PB sync, PB records, history, progress snapshots, PB sync UI action | Maps table can show real player PB status after OAuth sync |
 | Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
 
 ## Completed Notes
@@ -117,7 +117,7 @@ Next practical step:
 
 1. Use `POST /api/sync/warrior-data` as the normal refresh-cache-and-import path.
 2. Keep `POST /api/sync/warrior-data?use_cache=true` as a local-cache-only fallback/debug path.
-3. Continue with Sprint 5: Nadeo Core service for player PB sync.
+3. Sprint 5 moved to official Trackmania OAuth and is complete. Continue with Sprint 6: Dashboard MVP.
 
 ### Sprint 3: Maps Table UI
 
@@ -250,3 +250,56 @@ Cancellation note:
 - Already committed map positions remain saved.
 - The interrupted `sync_jobs` row may stay `running`.
 - The next normal sync skips saved `exact` and `over_10000` positions, so it can continue from unsynced maps.
+
+### Sprint 5: Player PB Sync
+
+Status: Done
+
+Implemented:
+
+- `routes_auth_trackmania.py` for official Trackmania OAuth connection flow.
+- `trackmania_oauth_service.py` for authorization code exchange, local token storage, and refresh flow.
+- `trackmania_records_service.py` for official Trackmania `/api/user/map-records` calls.
+- `auth_tokens` SQLite table for local OAuth tokens.
+- `POST /api/sync/player-pbs`.
+- Reads `TRACKMANIA_CLIENT_ID` and `TRACKMANIA_CLIENT_SECRET` from backend `.env`.
+- Batches map IDs in groups of 25 through `mapId[]` query params.
+- Stores current records in `player_records`.
+- Computes:
+  - `has_warrior`;
+  - `diff_to_warrior_ms`.
+- Writes `player_record_history` only for first-seen PBs and changed PB times.
+- Creates one `progress_snapshots` row per PB sync.
+- Frontend has Trackmania connection status, connect/disconnect/check actions, `Sync My PBs`, and `Test PB sync`.
+- Maps metadata and table refresh after PB sync, so earned/missing/close/not played filters update.
+- API verification notes are in `docs/TRACKMANIA_API_CHECK.md`.
+
+Verification:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m compileall app
+```
+
+```powershell
+cd frontend
+npm run build
+```
+
+Config smoke test without OAuth credentials returns a clear `400`.
+
+```json
+{
+  "detail": "Trackmania OAuth client id/secret are not configured."
+}
+```
+
+Real sync requires registering an app at `https://api.trackmania.com`, setting:
+
+```env
+TRACKMANIA_CLIENT_ID=...
+TRACKMANIA_CLIENT_SECRET=...
+TRACKMANIA_REDIRECT_URI=http://localhost:8000/api/auth/trackmania/callback
+```
+
+Then connect through `GET /api/auth/trackmania/start` or the frontend Trackmania Account panel.

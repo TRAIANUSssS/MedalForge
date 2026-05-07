@@ -27,13 +27,19 @@ frontend/
 
 Framework: FastAPI
 
-The backend owns all external API access. The frontend should not call Warrior or Nadeo APIs directly.
+The backend owns all external API access. The frontend should not call Warrior, Nadeo, or Trackmania
+OAuth APIs directly.
 
 Current routes:
 
 - `GET /api/health`
 - `POST /api/sync/warrior-data`
 - `POST /api/sync/warrior-positions`
+- `POST /api/sync/player-pbs`
+- `GET /api/auth/trackmania/start`
+- `GET /api/auth/trackmania/callback`
+- `GET /api/auth/trackmania/status`
+- `POST /api/auth/trackmania/disconnect`
 - `GET /api/maps`
 - `GET /api/maps/meta`
 
@@ -59,6 +65,7 @@ Tables:
 - `progress_snapshots` - aggregate progress over time
 - `sync_jobs` - sync history and failure details
 - `user_notes` - local notes, tags, and grind status
+- `auth_tokens` - local Trackmania OAuth tokens for the single-user app
 
 ## Sync Model
 
@@ -68,12 +75,14 @@ Preferred order:
 
 1. Warrior data
 2. Warrior positions
-3. Player PBs
-4. Progress snapshot
+3. Connect Trackmania account through OAuth
+4. Player PBs
+5. Progress snapshot
 
 Principles:
 
 - cache raw external responses;
+- store Trackmania OAuth tokens locally and never expose them to frontend responses;
 - parse Warrior data from the local raw cache after refresh;
 - parse defensively;
 - support parsing from local cache when the external source is unavailable;

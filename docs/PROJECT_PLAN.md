@@ -2,6 +2,11 @@
 
 # Trackmania Warrior Medals Dashboard
 
+> Update 2026-05-07: Sprint 5 player PB sync no longer uses the old Nadeo Core
+> `NADEO_ACCOUNT_ID` / `NADEO_CORE_TOKEN` plan. The implemented MVP uses official Trackmania OAuth
+> through `api.trackmania.com` and `GET /api/user/map-records` with `mapId[]` batches of 25. See
+> `docs/TRACKMANIA_API_CHECK.md` and `docs/DECISIONS.md`.
+
 Локальный fullstack-проект для анализа Warrior Medals в Trackmania.
 
 Цель проекта:

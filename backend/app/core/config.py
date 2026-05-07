@@ -13,6 +13,12 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./data/app.db"
     warrior_api_url: str = "https://raw.githubusercontent.com/ezio416/tm-json/main/warrior.json"
     warrior_api_user_agent: str | None = None
+    trackmania_client_id: str | None = None
+    trackmania_client_secret: str | None = None
+    trackmania_redirect_uri: str = "http://localhost:8000/api/auth/trackmania/callback"
+    trackmania_oauth_authorize_url: str = "https://api.trackmania.com/oauth/authorize"
+    trackmania_oauth_token_url: str = "https://api.trackmania.com/api/access_token"
+    trackmania_api_base_url: str = "https://api.trackmania.com"
     nadeo_account_id: str | None = None
     nadeo_core_token: str | None = None
     nadeo_live_token: str | None = None

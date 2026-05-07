@@ -11,6 +11,7 @@ Reference docs:
 - [API](API.md)
 - [Runbook](RUNBOOK.md)
 - [Decisions](DECISIONS.md)
+- [Trackmania API check](TRACKMANIA_API_CHECK.md)
 
 Suggested future docs:
 

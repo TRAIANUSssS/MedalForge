@@ -174,3 +174,23 @@ Consequences:
 
 - `GET /api/sync/jobs/latest?job_type=warrior_positions` exposes progress.
 - Interrupted syncs can leave a job in `running` until cancellation handling is added.
+
+## 2026-05-07: Player PB Sync Uses Trackmania OAuth
+
+Decision:
+
+- Use official Trackmania OAuth through `api.trackmania.com` for personal PB sync.
+- Use `GET /api/user/map-records` with `mapId[]` batches.
+- Store OAuth access and refresh tokens locally in SQLite.
+
+Why:
+
+- Ubisoft password/basic flows are not suitable as the primary user connection path.
+- Dedicated server account tokens do not represent the player's personal PBs.
+- The official endpoint returns OAuth user records and can be matched to `warrior_maps.map_id`.
+
+Consequences:
+
+- `POST /api/sync/player-pbs` requires a connected Trackmania account.
+- Frontend Settings/Account UI owns connect/disconnect/status actions.
+- `NADEO_CORE_TOKEN` and `NADEO_ACCOUNT_ID` are legacy and not used for PB sync.

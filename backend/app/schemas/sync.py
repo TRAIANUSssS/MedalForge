@@ -26,6 +26,19 @@ class PositionSyncResponse(BaseModel):
     over_10000: int = 0
 
 
+class PlayerPbSyncResponse(BaseModel):
+    job_id: int
+    status: str
+    items_total: int
+    items_success: int
+    items_failed: int
+    inserted: int
+    updated: int
+    skipped: int
+    history_inserted: int = 0
+    snapshots_inserted: int = 0
+
+
 class SyncJobResponse(BaseModel):
     id: int
     job_type: str
