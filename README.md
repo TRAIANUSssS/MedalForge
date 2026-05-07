@@ -20,6 +20,7 @@ Sprint 1 scaffold:
 - Sprint 2 endpoints started: `POST /api/sync/warrior-data` and `GET /api/maps`
 - Sprint 3 maps table: category/status filters, search, sorting, pagination
 - Sprint 4 started: `POST /api/sync/warrior-positions` for Nadeo Live required positions
+- Sprint 4.1 positions: `/top`-only sync, exact positions, `10k+` placeholder, progress display
 
 ## Backend
 

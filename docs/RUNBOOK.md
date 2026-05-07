@@ -132,6 +132,12 @@ Full sync:
 Invoke-RestMethod -Method Post http://localhost:8000/api/sync/warrior-positions
 ```
 
+Force refresh already-synced rows:
+
+```powershell
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?force=true"
+```
+
 Behavior:
 
 ```text
