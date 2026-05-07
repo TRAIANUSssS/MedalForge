@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 4: Nadeo Live Warrior positions.
+- Sprint 4.1: Nadeo Live `/top`-only Warrior positions.
 
 ## Stage Checklist
 
@@ -26,7 +26,8 @@ Current focus:
 | Sprint 1: Project scaffold | Done | FastAPI backend, SQLite init, React/Vite shell, health check | `GET /api/health`, `npm run build` |
 | Sprint 2: Warrior data sync | Done | Sync endpoint, raw JSON cache, defensive parser, upsert to `warrior_maps`, `GET /api/maps` | Sync refreshes local cache, then imports 4559 unique maps |
 | Sprint 3: Maps table UI | Done | Category/status filters, search submit/reset, sorting, pagination, skeleton/error/empty states, cleaned TM text | Frontend can browse and filter 4559 local maps |
-| Sprint 4: Warrior positions | In progress | Nadeo Live service, batched sync endpoint, top fallback, map position upsert, frontend sync action | `fallback_top=true` smoke test populated 5 positions |
+| Sprint 4: Warrior positions | Superseded | Batch position endpoint returned `[]`; moved to `/top`-only strategy | See Sprint 4.1 |
+| Sprint 4.1: Top-only position sync | In progress | Use `/top` only, store exact/10k+ status, avoid re-syncing stable over_10000 rows | Implementation in progress |
 | Sprint 5: Player PB sync | Pending | Nadeo Core service, PB records, history, progress snapshots | Dashboard can show real player progress |
 | Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
 
@@ -171,10 +172,9 @@ Status: In progress
 
 Implemented:
 
-- `nadeo_live_service.py` for Nadeo Live leaderboard position calls.
+- `nadeo_live_service.py` for Nadeo Live leaderboard calls.
 - `POST /api/sync/warrior-positions`.
-- Batch size: 50 maps per Nadeo Live request.
-- Optional `fallback_top=true` derives missing positions from the first 10,000 rows of the `top` leaderboard.
+- Uses `/top` only.
 - Reads `NADEO_LIVE_TOKEN` from backend `.env`.
 - Saves rows into `map_positions`:
   - `position_type = "warrior"`;
@@ -183,12 +183,12 @@ Implemented:
 - Maps API already exposes:
   - `required_position`;
   - `difficulty_tier`.
-- Frontend has `Sync positions`, `Test top fallback`, and result/error messages.
+- Frontend has `Sync positions`, `Test top sync`, and result/error messages.
 
 Verified with real token:
 
 ```powershell
-Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5&fallback_top=true"
+Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5&force=true"
 ```
 
 Result:
@@ -200,4 +200,36 @@ Result:
 Open issue:
 
 - batch position endpoint returns `[]` with the current user token, even though the `top` endpoint works.
-- Full `fallback_top=true` sync may be slow because it can require many leaderboard calls.
+- Full `/top` sync may be slow because it can require many leaderboard calls.
+
+### Sprint 4.1: Top-Only Warrior Positions
+
+Status: In progress
+
+Plan:
+
+1. Stop relying on the documented batch position endpoint for MVP.
+2. Use only:
+   ```text
+   GET /api/token/leaderboard/group/Personal_Best/map/{mapUid}/top?onlyWorld=true&length=100&offset=...
+   ```
+3. For each map:
+   - request `offset=9900&length=100`;
+   - if Warrior time is worse than the last available top-10000 score, store `position_status = over_10000`;
+   - otherwise binary-search the top pages and store the exact required position.
+4. Add `position_status` to `map_positions`:
+   - `exact`;
+   - `over_10000`;
+   - `not_found`;
+   - `failed`.
+5. Frontend display:
+   - `exact` -> `#6533`;
+   - `over_10000` -> `10k+`;
+   - no row -> `Not synced`.
+6. Do not automatically resync `over_10000` rows.
+
+Reason for `over_10000` sync rule:
+
+- Warrior medals generally become easier over time as more players set records.
+- If the required position is currently outside top 10000, the useful display is already `10k+`.
+- Rechecking those rows frequently is wasteful; they should only be refreshed manually or if the Warrior time changes in source data.

@@ -19,6 +19,7 @@ class MapListItem(BaseModel):
     warrior_time_ms: int | None = None
     world_record_time_ms: int | None = None
     required_position: int | None = None
+    position_status: str | None = None
     difficulty_tier: str | None = None
     pb_time_ms: int | None = None
     pb_position_world: int | None = None

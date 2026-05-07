@@ -1,6 +1,7 @@
 from collections.abc import Generator
 from pathlib import Path
 
+from sqlalchemy import inspect, text
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -34,6 +35,18 @@ def init_db() -> None:
     from app import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    apply_lightweight_migrations()
+
+
+def apply_lightweight_migrations() -> None:
+    inspector = inspect(engine)
+    if "map_positions" not in inspector.get_table_names():
+        return
+
+    columns = {column["name"] for column in inspector.get_columns("map_positions")}
+    with engine.begin() as connection:
+        if "position_status" not in columns:
+            connection.execute(text("ALTER TABLE map_positions ADD COLUMN position_status VARCHAR(32) NOT NULL DEFAULT 'exact'"))
 
 
 def get_db() -> Generator[Session, None, None]:

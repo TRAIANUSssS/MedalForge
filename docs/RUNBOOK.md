@@ -118,12 +118,6 @@ Smoke test a small batch:
 Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5"
 ```
 
-Smoke test with top leaderboard fallback:
-
-```powershell
-Invoke-RestMethod -Method Post "http://localhost:8000/api/sync/warrior-positions?limit=5&fallback_top=true"
-```
-
 Full sync:
 
 ```powershell
@@ -134,11 +128,11 @@ Behavior:
 
 ```text
 1. Read maps with map_uid and warrior_time_ms from SQLite
-2. Batch maps by 50
-3. Call Nadeo Live leaderboard position endpoint
-4. Optionally derive missing positions from `top` leaderboard when `fallback_top=true`
+2. Request /top at offset=9900 to check whether Warrior time is inside top 10000
+3. If outside top 10000, store position_status=over_10000
+4. If inside top 10000, binary-search /top pages and store exact position
 5. Upsert position_type=warrior into map_positions
-6. GET /api/maps shows required_position and difficulty_tier
+6. GET /api/maps shows #position or 10k+
 ```
 
 If `NADEO_LIVE_TOKEN` is missing, the backend returns `400`.
@@ -147,7 +141,7 @@ Current Nadeo behavior observed with the user token:
 
 - `top` leaderboard endpoint works.
 - batch position endpoint returns `[]`.
-- `fallback_top=true` successfully populated positions for a 5-map smoke test.
+- Sprint 4.1 uses only `/top`.
 
 ## Local Files
 

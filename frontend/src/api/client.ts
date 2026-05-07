@@ -14,7 +14,10 @@ export type WarriorSyncResponse = {
   skipped: number;
 };
 
-export type PositionSyncResponse = WarriorSyncResponse;
+export type PositionSyncResponse = WarriorSyncResponse & {
+  exact: number;
+  over_10000: number;
+};
 
 export type MapListItem = {
   map_uid: string;
@@ -27,6 +30,7 @@ export type MapListItem = {
   author_time_ms: number | null;
   world_record_time_ms: number | null;
   required_position: number | null;
+  position_status: string | null;
   difficulty_tier: string | null;
   pb_time_ms: number | null;
   has_warrior: boolean;
@@ -57,10 +61,10 @@ export async function syncWarriorData(useCache = false): Promise<WarriorSyncResp
   return request<WarriorSyncResponse>(`/api/sync/warrior-data${query}`, { method: "POST" });
 }
 
-export async function syncWarriorPositions(options: { limit?: number; fallbackTop?: boolean } = {}): Promise<PositionSyncResponse> {
+export async function syncWarriorPositions(options: { limit?: number; force?: boolean } = {}): Promise<PositionSyncResponse> {
   const query = new URLSearchParams();
   if (options.limit) query.set("limit", String(options.limit));
-  if (options.fallbackTop) query.set("fallback_top", "true");
+  if (options.force) query.set("force", "true");
   const suffix = query.toString() ? `?${query.toString()}` : "";
   return request<PositionSyncResponse>(`/api/sync/warrior-positions${suffix}`, { method: "POST" });
 }

@@ -132,7 +132,7 @@ export function App() {
       });
   }
 
-  function handlePositionSync(options: { limit?: number; fallbackTop?: boolean } = {}) {
+  function handlePositionSync(options: { limit?: number; force?: boolean } = {}) {
     setPositionSync({ status: "running" });
     syncWarriorPositions(options)
       .then((result) => {
@@ -228,9 +228,9 @@ export function App() {
               className="secondary-action"
               disabled={positionSync.status === "running"}
               type="button"
-              onClick={() => handlePositionSync({ limit: 5, fallbackTop: true })}
+              onClick={() => handlePositionSync({ limit: 5, force: true })}
             >
-              Test top fallback
+              Test top sync
             </button>
           </div>
         </section>
@@ -399,7 +399,7 @@ function PositionSyncMessage({ sync }: { sync: PositionSyncState }) {
   return (
     <p className="sync-message ok">
       Positions {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
-      {sync.result.skipped} skipped.
+      {sync.result.skipped} skipped, {sync.result.exact} exact, {sync.result.over_10000} over 10k.
     </p>
   );
 }
@@ -456,7 +456,7 @@ function MapsTable({ maps }: { maps: MapsState }) {
               <td>{formatTime(map.author_time_ms)}</td>
               <td>{formatTime(map.world_record_time_ms)}</td>
               <td>
-                {map.required_position ? `#${map.required_position}` : "Not synced"}
+                {formatPosition(map)}
                 {map.difficulty_tier ? <span className="difficulty-pill">{map.difficulty_tier}</span> : null}
               </td>
               <td>
@@ -560,6 +560,19 @@ function formatTime(ms: number | null) {
   const seconds = Math.floor((ms % 60000) / 1000);
   const millis = ms % 1000;
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
+}
+
+function formatPosition(map: MapListItem) {
+  if (map.position_status === "over_10000") {
+    return "10k+";
+  }
+  if (map.position_status === "not_found") {
+    return "Not found";
+  }
+  if (map.position_status === "failed") {
+    return "Failed";
+  }
+  return map.required_position ? `#${map.required_position}` : "Not synced";
 }
 
 function cleanTrackmaniaText(value: string | null) {

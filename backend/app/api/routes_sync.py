@@ -26,12 +26,12 @@ def sync_warrior_data_route(
 @router.post("/warrior-positions", response_model=PositionSyncResponse)
 def sync_warrior_positions_route(
     limit: int | None = None,
-    fallback_top: bool = False,
+    force: bool = False,
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> dict:
     try:
-        return sync_warrior_positions(db, settings, limit=limit, fallback_top=fallback_top)
+        return sync_warrior_positions(db, settings, limit=limit, force=force)
     except NadeoLiveConfigError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:

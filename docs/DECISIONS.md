@@ -140,20 +140,20 @@ Consequences:
 - `POST /api/sync/warrior-positions?limit=5` is available for smoke testing.
 - Full sync may take many API calls and should remain a manual action in MVP.
 
-## 2026-05-06: Add Top Leaderboard Fallback For Positions
+## 2026-05-06: Use Top Leaderboard For Positions
 
 Decision:
 
-- Add `fallback_top=true` to `POST /api/sync/warrior-positions`.
+- Use the Nadeo Live `/top` leaderboard endpoint as the MVP source for Warrior required positions.
 
 Why:
 
 - The documented batch position endpoint currently returns `[]` for the user token.
 - The `top` leaderboard endpoint works with the same token.
-- The fallback can populate positions when Warrior time is within the first 10,000 leaderboard rows.
+- We can show exact positions inside top 10,000 and a useful `10k+` placeholder outside it.
 
 Consequences:
 
-- `fallback_top=true` is useful for smoke tests and hard maps.
-- It is not a perfect replacement for the batch position endpoint because easy maps may require positions beyond the visible top 10,000.
-- Full fallback sync can be slow and should be run deliberately.
+- Each map requires one or more `/top` requests.
+- Full sync can be slow and should remain manual.
+- `over_10000` rows are stable enough to skip in normal sync and refresh only with `force=true` or if Warrior time changes.

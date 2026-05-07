@@ -36,6 +36,7 @@ def list_maps(
         select(
             MapPosition.map_uid.label("map_uid"),
             func.max(MapPosition.world_position).label("required_position"),
+            func.max(MapPosition.position_status).label("position_status"),
         )
         .where(MapPosition.position_type == "warrior")
         .group_by(MapPosition.map_uid)
@@ -43,7 +44,7 @@ def list_maps(
     )
 
     statement = (
-        select(WarriorMap, warrior_position.c.required_position, PlayerRecord, UserNote)
+        select(WarriorMap, warrior_position.c.required_position, warrior_position.c.position_status, PlayerRecord, UserNote)
         .outerjoin(warrior_position, warrior_position.c.map_uid == WarriorMap.map_uid)
         .outerjoin(PlayerRecord, PlayerRecord.map_uid == WarriorMap.map_uid)
         .outerjoin(UserNote, UserNote.map_uid == WarriorMap.map_uid)
@@ -149,8 +150,9 @@ def _apply_filters(
 def _map_row_to_dict(row: Sequence[object]) -> dict:
     warrior_map = row[0]
     required_position = row[1]
-    player_record = row[2]
-    user_note = row[3]
+    position_status = row[2]
+    player_record = row[3]
+    user_note = row[4]
 
     return {
         "map_uid": warrior_map.map_uid,
@@ -170,6 +172,7 @@ def _map_row_to_dict(row: Sequence[object]) -> dict:
         "warrior_time_ms": warrior_map.warrior_time_ms,
         "world_record_time_ms": warrior_map.world_record_time_ms,
         "required_position": required_position,
+        "position_status": position_status,
         "difficulty_tier": difficulty_tier_from_position(required_position),
         "pb_time_ms": player_record.pb_time_ms if player_record else None,
         "pb_position_world": player_record.pb_position_world if player_record else None,

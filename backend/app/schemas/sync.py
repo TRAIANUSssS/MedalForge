@@ -21,3 +21,5 @@ class PositionSyncResponse(BaseModel):
     inserted: int
     updated: int
     skipped: int
+    exact: int = 0
+    over_10000: int = 0

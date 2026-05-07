@@ -98,17 +98,17 @@ Response:
 
 ### POST /api/sync/warrior-positions
 
-Uses Nadeo Live API to fetch the world position required for each Warrior medal time.
+Uses Nadeo Live `/top` leaderboard pages to find the world position required for each Warrior medal time.
 
 Query params:
 
 ```text
 limit=optional integer
-fallback_top=false
+force=false
 ```
 
 `limit` is useful for token/API smoke tests before running all maps.
-`fallback_top=true` tries to derive missing positions from the first 10,000 rows of the `top` leaderboard. This is useful for debugging and hard maps, but it may require many API calls for large syncs.
+`force=true` rechecks rows that already have `position_status = exact` or `over_10000`.
 
 Requires backend `.env`:
 
@@ -127,16 +127,19 @@ Response:
   "items_failed": 0,
   "inserted": 4559,
   "updated": 0,
-  "skipped": 0
+  "skipped": 0,
+  "exact": 1200,
+  "over_10000": 3359
 }
 ```
 
 Notes:
 
-- maps are batched by 50 per Nadeo Live request;
 - position rows are stored in `map_positions` with `position_type = "warrior"`;
 - missing `NADEO_LIVE_TOKEN` returns `400`;
-- the batch position endpoint may return an empty list for the current user token; `fallback_top=true` is available as a slower fallback.
+- each map is queried individually through `/top`;
+- if Warrior time is outside the visible top 10,000, `position_status = "over_10000"` and `world_position = null`;
+- `over_10000` rows are not rechecked unless `force=true`.
 
 ## Planned MVP Endpoints
 

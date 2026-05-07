@@ -19,4 +19,5 @@ class MapPosition(TimestampMixin, Base):
     position_type: Mapped[str] = mapped_column(String(32), nullable=False)
     score_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     world_position: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    position_status: Mapped[str] = mapped_column(String(32), default="exact", nullable=False)
     fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
