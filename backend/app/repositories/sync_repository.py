@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 from app.models.sync_job import SyncJob
 
@@ -49,3 +50,29 @@ def finish_sync_job(
     db.commit()
     db.refresh(job)
     return job
+
+
+def update_sync_job_progress(
+    db: Session,
+    job: SyncJob,
+    *,
+    items_total: int,
+    items_success: int,
+    items_failed: int,
+    details_json: str | None = None,
+) -> SyncJob:
+    job.items_total = items_total
+    job.items_success = items_success
+    job.items_failed = items_failed
+    job.details_json = details_json
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+    return job
+
+
+def get_latest_sync_job(db: Session, job_type: str | None = None) -> SyncJob | None:
+    statement = select(SyncJob).order_by(SyncJob.id.desc()).limit(1)
+    if job_type:
+        statement = select(SyncJob).where(SyncJob.job_type == job_type).order_by(SyncJob.id.desc()).limit(1)
+    return db.scalar(statement)

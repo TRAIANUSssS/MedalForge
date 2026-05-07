@@ -143,6 +143,19 @@ Current Nadeo behavior observed with the user token:
 - batch position endpoint returns `[]`.
 - Sprint 4.1 uses only `/top`.
 
+Progress while sync is running:
+
+```powershell
+Invoke-RestMethod "http://localhost:8000/api/sync/jobs/latest?job_type=warrior_positions"
+```
+
+Stopping a running sync:
+
+- Prefer waiting for completion when possible.
+- If you stop the backend process, already committed positions remain saved.
+- The current `sync_jobs` row may remain `running` because there is no cancellation endpoint yet.
+- Normal next sync skips already saved `exact` and `over_10000` rows, so it can continue from the remaining maps.
+
 ## Local Files
 
 Ignored local files:

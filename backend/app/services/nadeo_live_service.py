@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.models.map_position import MapPosition
 from app.models.warrior_map import WarriorMap
-from app.repositories.sync_repository import create_sync_job, finish_sync_job
+from app.repositories.sync_repository import create_sync_job, finish_sync_job, update_sync_job_progress
 
 
 LEADERBOARD_TOP_URL_TEMPLATE = (
@@ -67,7 +67,7 @@ def sync_warrior_positions(
         errors: list[str] = []
 
         with httpx.Client(timeout=20.0, follow_redirects=True) as client:
-            for item in maps:
+            for index, item in enumerate(maps, start=1):
                 try:
                     result = lookup_position_from_top(client, settings, item)
                     if result.position_status == POSITION_FAILED:
@@ -90,6 +90,24 @@ def sync_warrior_positions(
                     db.rollback()
                     failed += 1
                     errors.append(f"{item.map_uid}: {exc}")
+                finally:
+                    progress_details = {
+                        "processed": index,
+                        "inserted": inserted,
+                        "updated": updated,
+                        "skipped": skipped,
+                        "exact": exact,
+                        "over_10000": over_10000,
+                        "errors": errors[:10],
+                    }
+                    update_sync_job_progress(
+                        db,
+                        job,
+                        items_total=len(maps),
+                        items_success=inserted + updated,
+                        items_failed=failed,
+                        details_json=json.dumps(progress_details, ensure_ascii=False),
+                    )
 
         status = "success" if failed == 0 else ("partial" if inserted + updated > 0 else "failed")
         details = {

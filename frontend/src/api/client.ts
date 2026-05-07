@@ -50,6 +50,20 @@ export type MapsMetaResponse = {
   status_counts: Record<string, number>;
 };
 
+export type SyncJobResponse = {
+  id: number;
+  job_type: string;
+  status: string;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_ms: number | null;
+  items_total: number | null;
+  items_success: number | null;
+  items_failed: number | null;
+  error_message: string | null;
+  details_json: string | null;
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function getHealth(): Promise<HealthResponse> {
@@ -92,6 +106,11 @@ export async function getMaps(params: {
 
 export async function getMapsMeta(): Promise<MapsMetaResponse> {
   return request<MapsMetaResponse>("/api/maps/meta");
+}
+
+export async function getLatestSyncJob(jobType?: string): Promise<SyncJobResponse | null> {
+  const query = jobType ? `?job_type=${encodeURIComponent(jobType)}` : "";
+  return request<SyncJobResponse | null>(`/api/sync/jobs/latest${query}`);
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {

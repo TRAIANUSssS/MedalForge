@@ -157,3 +157,20 @@ Consequences:
 - Each map requires one or more `/top` requests.
 - Full sync can be slow and should remain manual.
 - `over_10000` rows are stable enough to skip in normal sync and refresh only with `force=true` or if Warrior time changes.
+
+## 2026-05-07: Position Sync Progress Uses Sync Jobs
+
+Decision:
+
+- Store live position sync progress in the current `sync_jobs` row.
+
+Why:
+
+- Full `/top` sync is long-running.
+- The frontend needs progress without converting sync to a full background worker yet.
+- Updating `items_success`, `items_failed`, and `details_json` is enough for MVP visibility.
+
+Consequences:
+
+- `GET /api/sync/jobs/latest?job_type=warrior_positions` exposes progress.
+- Interrupted syncs can leave a job in `running` until cancellation handling is added.

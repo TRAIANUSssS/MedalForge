@@ -141,6 +141,30 @@ Notes:
 - if Warrior time is outside the visible top 10,000, `position_status = "over_10000"` and `world_position = null`;
 - `over_10000` rows are not rechecked unless `force=true`.
 
+### GET /api/sync/jobs/latest
+
+Returns the latest sync job, optionally filtered by type.
+
+Query params:
+
+```text
+job_type=warrior_positions
+```
+
+During position sync, `details_json` includes live progress:
+
+```json
+{
+  "processed": 42,
+  "inserted": 10,
+  "updated": 20,
+  "skipped": 0,
+  "exact": 18,
+  "over_10000": 12,
+  "errors": []
+}
+```
+
 ## Planned MVP Endpoints
 
 ### POST /api/sync/player-pbs

@@ -3,12 +3,39 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.core.database import get_db
-from app.schemas.sync import PositionSyncResponse, WarriorSyncResponse
+from app.models.sync_job import SyncJob
+from app.repositories.sync_repository import get_latest_sync_job
+from app.schemas.sync import PositionSyncResponse, SyncJobResponse, WarriorSyncResponse
 from app.services.nadeo_live_service import NadeoLiveConfigError, sync_warrior_positions
 from app.services.warrior_sync_service import sync_warrior_data
 
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
+
+
+def sync_job_to_response(job: SyncJob) -> dict:
+    return {
+        "id": job.id,
+        "job_type": job.job_type,
+        "status": job.status,
+        "started_at": job.started_at,
+        "finished_at": job.finished_at,
+        "duration_ms": job.duration_ms,
+        "items_total": job.items_total,
+        "items_success": job.items_success,
+        "items_failed": job.items_failed,
+        "error_message": job.error_message,
+        "details_json": job.details_json,
+    }
+
+
+@router.get("/jobs/latest", response_model=SyncJobResponse | None)
+def get_latest_sync_job_route(
+    job_type: str | None = None,
+    db: Session = Depends(get_db),
+) -> dict | None:
+    job = get_latest_sync_job(db, job_type=job_type)
+    return sync_job_to_response(job) if job else None
 
 
 @router.post("/warrior-data", response_model=WarriorSyncResponse)

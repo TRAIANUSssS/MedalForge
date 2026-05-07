@@ -227,9 +227,24 @@ Plan:
    - `over_10000` -> `10k+`;
    - no row -> `Not synced`.
 6. Do not automatically resync `over_10000` rows.
+7. Show live progress while a long sync is running.
 
 Reason for `over_10000` sync rule:
 
 - Warrior medals generally become easier over time as more players set records.
 - If the required position is currently outside top 10000, the useful display is already `10k+`.
 - Rechecking those rows frequently is wasteful; they should only be refreshed manually or if the Warrior time changes in source data.
+
+Progress:
+
+- `GET /api/sync/jobs/latest?job_type=warrior_positions` returns the latest job.
+- During sync, `details_json` includes `processed`, `exact`, `over_10000`, `skipped`, and `errors`.
+- Frontend polls this endpoint and displays `processed / total`.
+
+Cancellation note:
+
+- There is no cancellation endpoint yet.
+- Stopping the backend process interrupts the sync.
+- Already committed map positions remain saved.
+- The interrupted `sync_jobs` row may stay `running`.
+- The next normal sync skips saved `exact` and `over_10000` positions, so it can continue from unsynced maps.

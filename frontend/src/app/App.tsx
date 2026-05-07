@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import {
   getHealth,
+  getLatestSyncJob,
   getMaps,
   getMapsMeta,
   syncWarriorData,
@@ -10,6 +11,7 @@ import {
   type MapListItem,
   type MapsMetaResponse,
   type PositionSyncResponse,
+  type SyncJobResponse,
   type WarriorSyncResponse,
 } from "../api/client";
 
@@ -40,6 +42,16 @@ type PositionSyncState =
   | { status: "ok"; result: PositionSyncResponse }
   | { status: "error"; message: string };
 
+type PositionProgress = {
+  processed: number;
+  total: number;
+  exact: number;
+  over_10000: number;
+  skipped: number;
+  failed: number;
+  status: string;
+};
+
 const navItems = ["Dashboard", "Maps", "Stats", "Charts", "Settings"];
 
 export function App() {
@@ -48,6 +60,7 @@ export function App() {
   const [mapsMeta, setMapsMeta] = useState<MapsMetaState>({ status: "loading" });
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [positionSync, setPositionSync] = useState<PositionSyncState>({ status: "idle" });
+  const [positionProgress, setPositionProgress] = useState<PositionProgress | null>(null);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -85,6 +98,32 @@ export function App() {
   useEffect(() => {
     void loadMapsMeta();
   }, []);
+
+  useEffect(() => {
+    if (positionSync.status !== "running") {
+      return;
+    }
+
+    let cancelled = false;
+    const interval = window.setInterval(() => {
+      getLatestSyncJob("warrior_positions")
+        .then((job) => {
+          if (!cancelled) {
+            setPositionProgress(syncJobToProgress(job));
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setPositionProgress(null);
+          }
+        });
+    }, 1000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [positionSync.status]);
 
   function loadMaps(searchOverride = query) {
     setMaps({ status: "loading" });
@@ -134,9 +173,19 @@ export function App() {
 
   function handlePositionSync(options: { limit?: number; force?: boolean } = {}) {
     setPositionSync({ status: "running" });
+    setPositionProgress(null);
     syncWarriorPositions(options)
       .then((result) => {
         setPositionSync({ status: "ok", result });
+        setPositionProgress({
+          processed: result.items_success + result.items_failed + result.skipped,
+          total: result.items_total,
+          exact: result.exact,
+          over_10000: result.over_10000,
+          skipped: result.skipped,
+          failed: result.items_failed,
+          status: result.status,
+        });
         void loadMaps();
       })
       .catch((error: unknown) => {
@@ -197,7 +246,7 @@ export function App() {
               upserts parsed map rows into SQLite.
             </p>
             <SyncMessage sync={sync} />
-            <PositionSyncMessage sync={positionSync} />
+            <PositionSyncMessage sync={positionSync} progress={positionProgress} />
           </div>
           <div className="sync-actions">
             <button
@@ -383,13 +432,18 @@ function SyncMessage({ sync }: { sync: SyncState }) {
   );
 }
 
-function PositionSyncMessage({ sync }: { sync: PositionSyncState }) {
+function PositionSyncMessage({ sync, progress }: { sync: PositionSyncState; progress: PositionProgress | null }) {
   if (sync.status === "idle") {
     return null;
   }
 
   if (sync.status === "running") {
-    return <p className="sync-message">Warrior position sync is running...</p>;
+    return (
+      <p className="sync-message">
+        Warrior position sync is running{progress ? `: ${progress.processed} / ${progress.total}` : "..."}
+        {progress ? `, ${progress.exact} exact, ${progress.over_10000} over 10k` : null}
+      </p>
+    );
   }
 
   if (sync.status === "error") {
@@ -402,6 +456,34 @@ function PositionSyncMessage({ sync }: { sync: PositionSyncState }) {
       {sync.result.skipped} skipped, {sync.result.exact} exact, {sync.result.over_10000} over 10k.
     </p>
   );
+}
+
+function syncJobToProgress(job: SyncJobResponse | null): PositionProgress | null {
+  if (!job) {
+    return null;
+  }
+
+  let details: Partial<PositionProgress> = {};
+  if (job.details_json) {
+    try {
+      details = JSON.parse(job.details_json) as Partial<PositionProgress>;
+    } catch {
+      details = {};
+    }
+  }
+
+  const processed =
+    details.processed ?? (job.items_success ?? 0) + (job.items_failed ?? 0) + (details.skipped ?? 0);
+
+  return {
+    processed,
+    total: job.items_total ?? 0,
+    exact: details.exact ?? 0,
+    over_10000: details.over_10000 ?? 0,
+    skipped: details.skipped ?? 0,
+    failed: job.items_failed ?? 0,
+    status: job.status,
+  };
 }
 
 function MapsTable({ maps }: { maps: MapsState }) {
