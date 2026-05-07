@@ -5,11 +5,25 @@ from sqlalchemy import inspect, text
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-from app.core.config import get_settings
+from app.core.config import BACKEND_DIR, get_settings
 
 
 class Base(DeclarativeBase):
     pass
+
+
+def resolve_database_url(database_url: str) -> str:
+    if not database_url.startswith("sqlite:///"):
+        return database_url
+
+    raw_path = database_url.removeprefix("sqlite:///")
+    if raw_path in {":memory:", ""}:
+        return database_url
+
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = BACKEND_DIR / path
+    return f"sqlite:///{path.as_posix()}"
 
 
 def _ensure_sqlite_parent_dir(database_url: str) -> None:
@@ -24,10 +38,11 @@ def _ensure_sqlite_parent_dir(database_url: str) -> None:
 
 
 settings = get_settings()
-_ensure_sqlite_parent_dir(settings.database_url)
+database_url = resolve_database_url(settings.database_url)
+_ensure_sqlite_parent_dir(database_url)
 
-connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
-engine = create_engine(settings.database_url, connect_args=connect_args)
+connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
+engine = create_engine(database_url, connect_args=connect_args)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 

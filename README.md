@@ -32,6 +32,12 @@ copy .env.example .env
 uvicorn app.main:app --reload
 ```
 
+From the repository root without activating the venv:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload --app-dir backend
+```
+
 Backend URL:
 
 ```text
