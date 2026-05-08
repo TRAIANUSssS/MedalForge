@@ -265,11 +265,40 @@ Notes:
 - each sync creates one aggregate `progress_snapshots` row;
 - missing/expired Trackmania OAuth connection returns `400`.
 
-## Planned MVP Endpoints
-
 ### GET /api/stats/summary
 
-Returns dashboard summary and top map lists.
+Returns dashboard summary, top map lists, latest progress snapshot, and latest sync jobs.
+
+Response shape:
+
+```json
+{
+  "total_maps": 4559,
+  "earned_count": 94,
+  "missing_count": 70,
+  "not_played_count": 4395,
+  "played_count": 164,
+  "has_player_pbs": true,
+  "completion_percent": 2.06,
+  "close_025_count": 11,
+  "close_050_count": 24,
+  "close_100_count": 30,
+  "close_200_count": 42,
+  "avg_diff_missing_ms": 6364.3,
+  "avg_margin_earned_ms": 442.16,
+  "closest_missing_maps": [],
+  "quick_wins": [],
+  "best_margin_maps": [],
+  "latest_progress_snapshot": null,
+  "latest_sync_jobs": {
+    "warrior_data": null,
+    "warrior_positions": null,
+    "player_pbs": null
+  }
+}
+```
+
+## Planned MVP Endpoints
 
 ### GET /api/settings
 

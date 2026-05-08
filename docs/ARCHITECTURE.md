@@ -42,6 +42,7 @@ Current routes:
 - `POST /api/auth/trackmania/disconnect`
 - `GET /api/maps`
 - `GET /api/maps/meta`
+- `GET /api/stats/summary`
 
 Planned route groups:
 

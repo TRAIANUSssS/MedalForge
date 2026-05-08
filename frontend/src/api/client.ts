@@ -79,6 +79,74 @@ export type SyncJobResponse = {
   details_json: string | null;
 };
 
+export type SummaryMapItem = {
+  map_uid: string;
+  map_id: string | null;
+  name: string | null;
+  author_name: string | null;
+  category: string | null;
+  campaign_name: string | null;
+  warrior_time_ms: number | null;
+  pb_time_ms: number | null;
+  diff_to_warrior_ms: number | null;
+  margin_vs_warrior_ms: number | null;
+  required_position: number | null;
+  position_status: string | null;
+  difficulty_tier: string | null;
+};
+
+export type LatestSyncJobSummary = {
+  id: number;
+  job_type: string;
+  status: string;
+  started_at: string | null;
+  finished_at: string | null;
+  duration_ms: number | null;
+  items_total: number | null;
+  items_success: number | null;
+  items_failed: number | null;
+  error_message: string | null;
+};
+
+export type StatsSummaryResponse = {
+  total_maps: number;
+  earned_count: number;
+  missing_count: number;
+  not_played_count: number;
+  played_count: number;
+  has_player_pbs: boolean;
+  completion_percent: number;
+  close_025_count: number;
+  close_050_count: number;
+  close_100_count: number;
+  close_200_count: number;
+  avg_diff_missing_ms: number | null;
+  avg_margin_earned_ms: number | null;
+  closest_missing_maps: SummaryMapItem[];
+  quick_wins: SummaryMapItem[];
+  best_margin_maps: SummaryMapItem[];
+  latest_progress_snapshot: {
+    account_id: string;
+    total_maps: number;
+    earned_warrior_count: number;
+    missing_warrior_count: number;
+    completion_percent: number;
+    close_025_count: number;
+    close_050_count: number;
+    close_100_count: number;
+    close_200_count: number;
+    not_played_count: number;
+    avg_diff_missing_ms: number | null;
+    avg_margin_earned_ms: number | null;
+    snapshot_at: string;
+  } | null;
+  latest_sync_jobs: {
+    warrior_data: LatestSyncJobSummary | null;
+    warrior_positions: LatestSyncJobSummary | null;
+    player_pbs: LatestSyncJobSummary | null;
+  };
+};
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
 export async function getHealth(): Promise<HealthResponse> {
@@ -140,6 +208,10 @@ export async function getMaps(params: {
 
 export async function getMapsMeta(): Promise<MapsMetaResponse> {
   return request<MapsMetaResponse>("/api/maps/meta");
+}
+
+export async function getStatsSummary(): Promise<StatsSummaryResponse> {
+  return request<StatsSummaryResponse>("/api/stats/summary");
 }
 
 export async function getLatestSyncJob(jobType?: string): Promise<SyncJobResponse | null> {

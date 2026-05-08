@@ -29,7 +29,7 @@ Current focus:
 | Sprint 4: Warrior positions | Superseded | Batch position endpoint returned `[]`; moved to `/top`-only strategy | See Sprint 4.1 |
 | Sprint 4.1: Top-only position sync | Done | Use `/top` only, store exact/10k+ status, avoid re-syncing stable over_10000 rows, show progress | Full position sync completed successfully |
 | Sprint 5: Player PB sync | Done | Trackmania OAuth, official map-records PB sync, PB records, history, progress snapshots, PB sync UI action | Maps table can show real player PB status after OAuth sync |
-| Sprint 6: Dashboard MVP | Pending | Progress bar, summary cards, close medals, quick wins | Main page answers basic progress questions |
+| Sprint 6: Dashboard MVP | Done | Summary API, progress hero, dashboard blocks, empty/error/loading states | Dashboard shows real PB progress and sync status |
 
 ## Completed Notes
 
@@ -303,3 +303,63 @@ TRACKMANIA_REDIRECT_URI=http://localhost:8000/api/auth/trackmania/callback
 ```
 
 Then connect through `GET /api/auth/trackmania/start` or the frontend Trackmania Account panel.
+
+### Sprint 6: Dashboard MVP
+
+Status: Done
+
+Implemented:
+
+- `GET /api/stats/summary`.
+- `stats_repository.py` and `stats_service.py` for dashboard aggregation.
+- Dashboard summary metrics:
+  - `total_maps`;
+  - `earned_count`;
+  - `missing_count`;
+  - `not_played_count`;
+  - `completion_percent`;
+  - `close_025_count`;
+  - `close_050_count`;
+  - `close_100_count`;
+  - `close_200_count`;
+  - `avg_diff_missing_ms`;
+  - `avg_margin_earned_ms`.
+- Dashboard top lists:
+  - `closest_missing_maps`;
+  - `quick_wins`;
+  - `best_margin_maps`.
+- Latest local visibility blocks:
+  - `latest_progress_snapshot`;
+  - `latest_sync_jobs` for `warrior_data`, `warrior_positions`, and `player_pbs`.
+- Frontend dashboard-first layout with:
+  - overall progress bar;
+  - summary cards;
+  - close medals block;
+  - quick wins block;
+  - best margins block;
+  - sync status block;
+  - loading skeleton;
+  - error state;
+  - empty state when PBs are not synced yet.
+- Existing maps table, filters, sync controls, and Trackmania account actions remain available.
+
+Verification:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m compileall app
+```
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -c "from fastapi.testclient import TestClient; from app.main import app; client=TestClient(app); print(client.get('/api/stats/summary').status_code)"
+```
+
+```powershell
+cd frontend
+npm run build
+```
+
+Next practical step:
+
+- Sprint 7: Stats page and broader breakdowns, using the new summary/service foundation without duplicating dashboard logic.

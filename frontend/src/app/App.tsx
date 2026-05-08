@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
 
 import {
+  disconnectTrackmaniaAuth,
   getHealth,
   getLatestSyncJob,
   getMaps,
   getMapsMeta,
+  getStatsSummary,
   getTrackmaniaAuthStatus,
-  disconnectTrackmaniaAuth,
   startTrackmaniaAuth,
-  syncWarriorData,
   syncPlayerPbs,
+  syncWarriorData,
   syncWarriorPositions,
   type HealthResponse,
+  type LatestSyncJobSummary,
   type MapListItem,
   type MapsMetaResponse,
   type PlayerPbSyncResponse,
   type PositionSyncResponse,
+  type StatsSummaryResponse,
+  type SummaryMapItem,
   type SyncJobResponse,
   type TrackmaniaAuthStatusResponse,
   type WarriorSyncResponse,
@@ -34,6 +38,11 @@ type MapsState =
 type MapsMetaState =
   | { status: "loading" }
   | { status: "ok"; data: MapsMetaResponse }
+  | { status: "error"; message: string };
+
+type StatsState =
+  | { status: "loading" }
+  | { status: "ok"; data: StatsSummaryResponse }
   | { status: "error"; message: string };
 
 type SyncState =
@@ -75,6 +84,7 @@ export function App() {
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [maps, setMaps] = useState<MapsState>({ status: "loading" });
   const [mapsMeta, setMapsMeta] = useState<MapsMetaState>({ status: "loading" });
+  const [stats, setStats] = useState<StatsState>({ status: "loading" });
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [positionSync, setPositionSync] = useState<PositionSyncState>({ status: "idle" });
   const [playerPbSync, setPlayerPbSync] = useState<PlayerPbSyncState>({ status: "idle" });
@@ -100,8 +110,7 @@ export function App() {
       })
       .catch((error: unknown) => {
         if (!cancelled) {
-          const message = error instanceof Error ? error.message : "Unknown backend error";
-          setHealth({ status: "error", message });
+          setHealth({ status: "error", message: getErrorMessage(error, "Unknown backend error") });
         }
       });
 
@@ -117,6 +126,7 @@ export function App() {
   useEffect(() => {
     void loadMapsMeta();
     void loadTrackmaniaAuthStatus();
+    void loadStatsSummary();
   }, []);
 
   useEffect(() => {
@@ -160,8 +170,7 @@ export function App() {
         setMaps({ status: "ok", items: data.items, total: data.total });
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown maps error";
-        setMaps({ status: "error", message });
+        setMaps({ status: "error", message: getErrorMessage(error, "Unknown maps error") });
       });
   }
 
@@ -171,8 +180,18 @@ export function App() {
         setMapsMeta({ status: "ok", data });
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown maps metadata error";
-        setMapsMeta({ status: "error", message });
+        setMapsMeta({ status: "error", message: getErrorMessage(error, "Unknown maps metadata error") });
+      });
+  }
+
+  function loadStatsSummary() {
+    setStats({ status: "loading" });
+    return getStatsSummary()
+      .then((data) => {
+        setStats({ status: "ok", data });
+      })
+      .catch((error: unknown) => {
+        setStats({ status: "error", message: getErrorMessage(error, "Unknown dashboard error") });
       });
   }
 
@@ -183,9 +202,14 @@ export function App() {
         setTrackmaniaAuth({ status: "ok", data });
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown Trackmania auth error";
-        setTrackmaniaAuth({ status: "error", message });
+        setTrackmaniaAuth({ status: "error", message: getErrorMessage(error, "Unknown Trackmania auth error") });
       });
+  }
+
+  function refreshDashboardData() {
+    void loadMapsMeta();
+    void loadStatsSummary();
+    void loadMaps();
   }
 
   function handleTrackmaniaConnect() {
@@ -194,8 +218,7 @@ export function App() {
         window.location.href = result.authorize_url;
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown Trackmania auth error";
-        setTrackmaniaAuth({ status: "error", message });
+        setTrackmaniaAuth({ status: "error", message: getErrorMessage(error, "Unknown Trackmania auth error") });
       });
   }
 
@@ -203,8 +226,7 @@ export function App() {
     disconnectTrackmaniaAuth()
       .then(() => loadTrackmaniaAuthStatus())
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown Trackmania auth error";
-        setTrackmaniaAuth({ status: "error", message });
+        setTrackmaniaAuth({ status: "error", message: getErrorMessage(error, "Unknown Trackmania auth error") });
       });
   }
 
@@ -214,12 +236,10 @@ export function App() {
       .then((result) => {
         setSync({ status: "ok", result });
         setOffset(0);
-        void loadMapsMeta();
-        void loadMaps();
+        refreshDashboardData();
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown sync error";
-        setSync({ status: "error", message });
+        setSync({ status: "error", message: getErrorMessage(error, "Unknown sync error") });
       });
   }
 
@@ -238,11 +258,10 @@ export function App() {
           failed: result.items_failed,
           status: result.status,
         });
-        void loadMaps();
+        refreshDashboardData();
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown position sync error";
-        setPositionSync({ status: "error", message });
+        setPositionSync({ status: "error", message: getErrorMessage(error, "Unknown position sync error") });
       });
   }
 
@@ -252,18 +271,13 @@ export function App() {
       .then((result) => {
         setPlayerPbSync({ status: "ok", result });
         setOffset(0);
-        void loadMapsMeta();
-        void loadMaps();
+        refreshDashboardData();
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Unknown PB sync error";
-        setPlayerPbSync({ status: "error", message });
+        setPlayerPbSync({ status: "error", message: getErrorMessage(error, "Unknown PB sync error") });
       });
   }
 
-  const totalMaps = maps.status === "ok" ? maps.total : 0;
-  const earnedCount = mapsMeta.status === "ok" ? mapsMeta.data.status_counts.earned ?? 0 : 0;
-  const closeCount = mapsMeta.status === "ok" ? mapsMeta.data.status_counts.close ?? 0 : 0;
   const pageStart = maps.status === "ok" && maps.total > 0 ? offset + 1 : 0;
   const pageEnd = maps.status === "ok" ? Math.min(offset + limit, maps.total) : 0;
 
@@ -274,7 +288,7 @@ export function App() {
           <span className="brand-mark">MF</span>
           <div>
             <h1>MedalForge</h1>
-            <p>Warrior medals dashboard</p>
+            <p>Trackmania Warrior dashboard</p>
           </div>
         </div>
 
@@ -285,134 +299,137 @@ export function App() {
             </button>
           ))}
         </nav>
+
+        <div className="sidebar-note">
+          <span>Local-first</span>
+          <p>Frontend talks only to the local FastAPI backend. OAuth tokens stay server-side.</p>
+        </div>
       </aside>
 
       <main className="workspace">
         <section className="page-header">
           <div>
-            <p className="eyebrow">Sprint 2</p>
-            <h2>Maps workspace</h2>
+            <p className="eyebrow">Sprint 6</p>
+            <h2>Dashboard MVP</h2>
             <p>
-              Browse local Warrior medal data, filter by source category, search maps, and refresh
-              the raw cache when the upstream JSON changes.
+              Track Warrior medal progress, surface near-misses, and keep sync status visible
+              without leaving the main workspace.
             </p>
           </div>
           <HealthBadge health={health} />
         </section>
 
-        <section className="summary-grid" aria-label="MVP progress placeholders">
-          <MetricCard label="Warrior maps" value={String(totalMaps)} detail="Stored locally" />
-          <MetricCard label="Earned medals" value={String(earnedCount)} detail="From current PB records" />
-          <MetricCard label="Close medals" value={String(closeCount)} detail="Within 1 second" />
-          <MetricCard
-            label="Snapshots"
-            value={playerPbSync.status === "ok" ? String(playerPbSync.result.snapshots_inserted) : "0"}
-            detail="Created after PB sync"
-          />
-        </section>
+        <DashboardSection
+          stats={stats}
+          sync={sync}
+          positionSync={positionSync}
+          playerPbSync={playerPbSync}
+          positionProgress={positionProgress}
+          onRetry={() => void loadStatsSummary()}
+        />
 
-        <section className="content-panel sync-panel">
-          <div>
-            <h3>Warrior source sync</h3>
-            <p>
-              Runs `POST /api/sync/warrior-data`, writes `backend/data/raw/warrior_all.json`, and
-              upserts parsed map rows into SQLite.
-            </p>
-            <SyncMessage sync={sync} />
-            <PositionSyncMessage sync={positionSync} progress={positionProgress} />
-            <PlayerPbSyncMessage sync={playerPbSync} />
-          </div>
-          <div className="sync-actions">
-            <button
-              className="primary-action"
-              disabled={sync.status === "running"}
-              type="button"
-              onClick={() => handleSync(false)}
-            >
-              {sync.status === "running" ? "Syncing..." : "Sync Warrior data"}
-            </button>
-            <button
-              className="secondary-action"
-              disabled={sync.status === "running"}
-              type="button"
-              onClick={() => handleSync(true)}
-            >
-              Parse local cache
-            </button>
-            <button
-              className="secondary-action"
-              disabled={positionSync.status === "running"}
-              type="button"
-              onClick={() => handlePositionSync()}
-            >
-              {positionSync.status === "running" ? "Syncing positions..." : "Sync positions"}
-            </button>
-            <button
-              className="secondary-action"
-              disabled={positionSync.status === "running"}
-              type="button"
-              onClick={() => handlePositionSync({ limit: 5, force: true })}
-            >
-              Test top sync
-            </button>
-            <button
-              className="secondary-action"
-              disabled={
-                playerPbSync.status === "running" ||
-                trackmaniaAuth.status !== "ok" ||
-                !trackmaniaAuth.data.connected
-              }
-              type="button"
-              onClick={() => handlePlayerPbSync({ limit: 10 })}
-            >
-              Test PB sync
-            </button>
-          </div>
-        </section>
+        <section className="control-grid">
+          <section className="content-panel sync-panel">
+            <div>
+              <h3>Sync Control</h3>
+              <p>
+                Refresh Warrior source data, update required positions, and sync personal bests from
+                the connected Trackmania account.
+              </p>
+              <SyncMessage sync={sync} />
+              <PositionSyncMessage sync={positionSync} progress={positionProgress} />
+              <PlayerPbSyncMessage sync={playerPbSync} />
+            </div>
+            <div className="sync-actions">
+              <button
+                className="primary-action"
+                disabled={sync.status === "running"}
+                type="button"
+                onClick={() => handleSync(false)}
+              >
+                {sync.status === "running" ? "Syncing..." : "Sync Warrior data"}
+              </button>
+              <button
+                className="secondary-action"
+                disabled={sync.status === "running"}
+                type="button"
+                onClick={() => handleSync(true)}
+              >
+                Parse local cache
+              </button>
+              <button
+                className="secondary-action"
+                disabled={positionSync.status === "running"}
+                type="button"
+                onClick={() => handlePositionSync()}
+              >
+                {positionSync.status === "running" ? "Syncing positions..." : "Sync positions"}
+              </button>
+              <button
+                className="secondary-action"
+                disabled={positionSync.status === "running"}
+                type="button"
+                onClick={() => handlePositionSync({ limit: 5, force: true })}
+              >
+                Test top sync
+              </button>
+              <button
+                className="secondary-action"
+                disabled={
+                  playerPbSync.status === "running" ||
+                  trackmaniaAuth.status !== "ok" ||
+                  !trackmaniaAuth.data.connected
+                }
+                type="button"
+                onClick={() => handlePlayerPbSync({ limit: 10 })}
+              >
+                Test PB sync
+              </button>
+            </div>
+          </section>
 
-        <section className="content-panel auth-panel">
-          <div>
-            <h3>Trackmania Account</h3>
-            <TrackmaniaAuthStatus auth={trackmaniaAuth} />
-          </div>
-          <div className="sync-actions">
-            <button className="primary-action" type="button" onClick={handleTrackmaniaConnect}>
-              Connect Trackmania account
-            </button>
-            <button className="secondary-action" type="button" onClick={() => void loadTrackmaniaAuthStatus()}>
-              Check connection
-            </button>
-            <button
-              className="secondary-action"
-              disabled={trackmaniaAuth.status !== "ok" || !trackmaniaAuth.data.connected}
-              type="button"
-              onClick={handleTrackmaniaDisconnect}
-            >
-              Disconnect
-            </button>
-            <button
-              className="secondary-action"
-              disabled={
-                playerPbSync.status === "running" ||
-                trackmaniaAuth.status !== "ok" ||
-                !trackmaniaAuth.data.connected
-              }
-              type="button"
-              onClick={() => handlePlayerPbSync()}
-            >
-              {playerPbSync.status === "running" ? "Syncing PBs..." : "Sync My PBs"}
-            </button>
-          </div>
+          <section className="content-panel auth-panel">
+            <div>
+              <h3>Trackmania Account</h3>
+              <TrackmaniaAuthStatus auth={trackmaniaAuth} />
+            </div>
+            <div className="sync-actions">
+              <button className="primary-action" type="button" onClick={handleTrackmaniaConnect}>
+                Connect Trackmania account
+              </button>
+              <button className="secondary-action" type="button" onClick={() => void loadTrackmaniaAuthStatus()}>
+                Check connection
+              </button>
+              <button
+                className="secondary-action"
+                disabled={trackmaniaAuth.status !== "ok" || !trackmaniaAuth.data.connected}
+                type="button"
+                onClick={handleTrackmaniaDisconnect}
+              >
+                Disconnect
+              </button>
+              <button
+                className="secondary-action"
+                disabled={
+                  playerPbSync.status === "running" ||
+                  trackmaniaAuth.status !== "ok" ||
+                  !trackmaniaAuth.data.connected
+                }
+                type="button"
+                onClick={() => handlePlayerPbSync()}
+              >
+                {playerPbSync.status === "running" ? "Syncing PBs..." : "Sync My PBs"}
+              </button>
+            </div>
+          </section>
         </section>
 
         <section className="maps-panel">
           <div className="table-toolbar">
             <div>
-              <h3>Maps</h3>
+              <h3>Maps Database</h3>
               <p>
-                {maps.status === "ok"
-                  ? `${pageStart}-${pageEnd} of ${maps.total} maps`
-                  : "Local map database"}
+                {maps.status === "ok" ? `${pageStart}-${pageEnd} of ${maps.total} maps` : "Local Warrior map database"}
               </p>
             </div>
             <form
@@ -510,6 +527,162 @@ export function App() {
   );
 }
 
+function DashboardSection({
+  stats,
+  sync,
+  positionSync,
+  playerPbSync,
+  positionProgress,
+  onRetry,
+}: {
+  stats: StatsState;
+  sync: SyncState;
+  positionSync: PositionSyncState;
+  playerPbSync: PlayerPbSyncState;
+  positionProgress: PositionProgress | null;
+  onRetry: () => void;
+}) {
+  if (stats.status === "loading") {
+    return <DashboardSkeleton />;
+  }
+
+  if (stats.status === "error") {
+    return (
+      <section className="dashboard-error">
+        <div>
+          <p className="eyebrow">Dashboard unavailable</p>
+          <h3>Summary failed to load</h3>
+          <p>{stats.message}</p>
+        </div>
+        <button className="primary-action" type="button" onClick={onRetry}>
+          Retry summary
+        </button>
+      </section>
+    );
+  }
+
+  const summary = stats.data;
+  const snapshotTime = summary.latest_progress_snapshot?.snapshot_at ?? null;
+
+  return (
+    <section className="dashboard-stack">
+      <section className="hero-card">
+        <div>
+          <p className="eyebrow">Overall progress</p>
+          <h3>
+            {summary.earned_count} / {summary.total_maps} Warrior medals
+          </h3>
+          <p>
+            {summary.missing_count} missing, {summary.not_played_count} not played,
+            {snapshotTime ? ` last snapshot ${formatDateTime(snapshotTime)}.` : " snapshot not created yet."}
+          </p>
+        </div>
+        <div className="hero-side">
+          <strong>{formatPercent(summary.completion_percent)}</strong>
+          <span>completion</span>
+        </div>
+        <div className="progress-track" aria-label="Overall Warrior completion progress">
+          <div className="progress-fill" style={{ width: `${Math.min(summary.completion_percent, 100)}%` }} />
+        </div>
+        <div className="hero-chips">
+          <span>≤250 ms: {summary.close_025_count}</span>
+          <span>≤500 ms: {summary.close_050_count}</span>
+          <span>≤1000 ms: {summary.close_100_count}</span>
+          <span>≤2000 ms: {summary.close_200_count}</span>
+        </div>
+      </section>
+
+      <section className="summary-grid">
+        <MetricCard
+          label="Earned"
+          value={String(summary.earned_count)}
+          detail="Current PBs already beat Warrior"
+        />
+        <MetricCard
+          label="Missing"
+          value={String(summary.missing_count)}
+          detail={summary.avg_diff_missing_ms !== null ? `Average gap ${formatGap(summary.avg_diff_missing_ms)}` : "No missing PBs yet"}
+        />
+        <MetricCard label="Not Played" value={String(summary.not_played_count)} detail="Maps with no local PB record" />
+        <MetricCard
+          label="Best Margin"
+          value={summary.avg_margin_earned_ms !== null ? formatGap(summary.avg_margin_earned_ms) : "N/A"}
+          detail="Average lead on earned maps"
+        />
+      </section>
+
+      {!summary.has_player_pbs ? (
+        <section className="dashboard-empty">
+          <div>
+            <p className="eyebrow">PB sync required</p>
+            <h3>No personal bests synced yet</h3>
+            <p>
+              Connect your Trackmania account and run <strong>Sync My PBs</strong>. The dashboard
+              will start showing completion, close medals, and quick wins as soon as local PB data
+              exists.
+            </p>
+          </div>
+          <div className="empty-hints">
+            <span>1. Sync Warrior data</span>
+            <span>2. Connect Trackmania account</span>
+            <span>3. Run PB sync</span>
+          </div>
+        </section>
+      ) : (
+        <section className="dashboard-grid">
+          <SummaryListBlock
+            title="Close Medals"
+            subtitle="Closest misses by current PB gap"
+            items={summary.closest_missing_maps}
+            emptyMessage="No close missing medals right now."
+            valueType="gap"
+          />
+          <SummaryListBlock
+            title="Quick Wins"
+            subtitle="Reachable missing medals with the best payoff"
+            items={summary.quick_wins}
+            emptyMessage="No quick wins available yet."
+            valueType="gap"
+          />
+          <SummaryListBlock
+            title="Best Margins"
+            subtitle="Maps where your PB is safely ahead of Warrior"
+            items={summary.best_margin_maps}
+            emptyMessage="No earned Warrior medals yet."
+            valueType="margin"
+          />
+        </section>
+      )}
+
+      <SyncStatusBlock
+        latestSyncJobs={summary.latest_sync_jobs}
+        sync={sync}
+        positionSync={positionSync}
+        playerPbSync={playerPbSync}
+        positionProgress={positionProgress}
+      />
+    </section>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <section className="dashboard-stack">
+      <section className="hero-card skeleton-block" />
+      <section className="summary-grid">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <article className="metric-card skeleton-block" key={index} />
+        ))}
+      </section>
+      <section className="dashboard-grid">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <section className="list-block skeleton-block" key={index} />
+        ))}
+      </section>
+    </section>
+  );
+}
+
 function HealthBadge({ health }: { health: HealthState }) {
   if (health.status === "loading") {
     return <div className="health-badge loading">Checking backend</div>;
@@ -532,6 +705,127 @@ function MetricCard({ label, value, detail }: { label: string; value: string; de
   );
 }
 
+function SummaryListBlock({
+  title,
+  subtitle,
+  items,
+  emptyMessage,
+  valueType,
+}: {
+  title: string;
+  subtitle: string;
+  items: SummaryMapItem[];
+  emptyMessage: string;
+  valueType: "gap" | "margin";
+}) {
+  return (
+    <section className="list-block">
+      <div className="list-block-header">
+        <h3>{title}</h3>
+        <p>{subtitle}</p>
+      </div>
+      {items.length === 0 ? (
+        <div className="list-empty">{emptyMessage}</div>
+      ) : (
+        <div className="summary-list">
+          {items.map((item) => (
+            <article className="summary-row" key={`${title}-${item.map_uid}`}>
+              <div>
+                <strong>{cleanTrackmaniaText(item.name) ?? "Unnamed map"}</strong>
+                <span>
+                  {item.category ?? "Unknown"}
+                  {item.campaign_name ? ` · ${item.campaign_name}` : ""}
+                </span>
+              </div>
+              <div className="summary-row-meta">
+                <strong>{valueType === "gap" ? formatGap(item.diff_to_warrior_ms) : formatGap(item.margin_vs_warrior_ms)}</strong>
+                <span>{formatPositionSummary(item)}</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SyncStatusBlock({
+  latestSyncJobs,
+  sync,
+  positionSync,
+  playerPbSync,
+  positionProgress,
+}: {
+  latestSyncJobs: StatsSummaryResponse["latest_sync_jobs"];
+  sync: SyncState;
+  positionSync: PositionSyncState;
+  playerPbSync: PlayerPbSyncState;
+  positionProgress: PositionProgress | null;
+}) {
+  const jobs: Array<{
+    label: string;
+    job: LatestSyncJobSummary | null;
+    currentStatus: string;
+    detail: string;
+  }> = [
+    {
+      label: "Warrior data",
+      job: latestSyncJobs.warrior_data,
+      currentStatus: sync.status === "running" ? "running" : latestSyncJobs.warrior_data?.status ?? "idle",
+      detail:
+        sync.status === "running"
+          ? "Refreshing local Warrior source cache"
+          : sync.status === "error"
+            ? sync.message
+            : formatSyncJobDetail(latestSyncJobs.warrior_data),
+    },
+    {
+      label: "Warrior positions",
+      job: latestSyncJobs.warrior_positions,
+      currentStatus:
+        positionSync.status === "running" ? "running" : latestSyncJobs.warrior_positions?.status ?? "idle",
+      detail:
+        positionSync.status === "running"
+          ? formatPositionProgress(positionProgress)
+          : positionSync.status === "error"
+            ? positionSync.message
+            : formatSyncJobDetail(latestSyncJobs.warrior_positions),
+    },
+    {
+      label: "Player PBs",
+      job: latestSyncJobs.player_pbs,
+      currentStatus: playerPbSync.status === "running" ? "running" : latestSyncJobs.player_pbs?.status ?? "idle",
+      detail:
+        playerPbSync.status === "running"
+          ? "Syncing current user PBs from Trackmania OAuth API"
+          : playerPbSync.status === "error"
+            ? playerPbSync.message
+            : formatSyncJobDetail(latestSyncJobs.player_pbs),
+    },
+  ];
+
+  return (
+    <section className="sync-status-block">
+      <div className="list-block-header">
+        <h3>Sync Status</h3>
+        <p>Latest local sync jobs for the three MVP data sources.</p>
+      </div>
+      <div className="sync-status-grid">
+        {jobs.map((item) => (
+          <article className="sync-status-card" key={item.label}>
+            <div className="sync-status-top">
+              <strong>{item.label}</strong>
+              <span className={`status-badge status-${item.currentStatus}`}>{formatStatusLabel(item.currentStatus)}</span>
+            </div>
+            <p>{item.detail}</p>
+            <span>{item.job?.finished_at ? `Last finished ${formatDateTime(item.job.finished_at)}` : "No completed sync yet"}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SyncMessage({ sync }: { sync: SyncState }) {
   if (sync.status === "idle") {
     return null;
@@ -547,8 +841,7 @@ function SyncMessage({ sync }: { sync: SyncState }) {
 
   return (
     <p className="sync-message ok">
-      {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
-      {sync.result.skipped} skipped.
+      {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated, {sync.result.skipped} skipped.
     </p>
   );
 }
@@ -559,12 +852,7 @@ function PositionSyncMessage({ sync, progress }: { sync: PositionSyncState; prog
   }
 
   if (sync.status === "running") {
-    return (
-      <p className="sync-message">
-        Warrior position sync is running{progress ? `: ${progress.processed} / ${progress.total}` : "..."}
-        {progress ? `, ${progress.exact} exact, ${progress.over_10000} over 10k` : null}
-      </p>
-    );
+    return <p className="sync-message">{formatPositionProgress(progress)}</p>;
   }
 
   if (sync.status === "error") {
@@ -573,8 +861,7 @@ function PositionSyncMessage({ sync, progress }: { sync: PositionSyncState; prog
 
   return (
     <p className="sync-message ok">
-      Positions {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
-      {sync.result.skipped} skipped, {sync.result.exact} exact, {sync.result.over_10000} over 10k.
+      Positions {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated, {sync.result.skipped} skipped, {sync.result.exact} exact, {sync.result.over_10000} over 10k.
     </p>
   );
 }
@@ -594,9 +881,7 @@ function PlayerPbSyncMessage({ sync }: { sync: PlayerPbSyncState }) {
 
   return (
     <p className="sync-message ok">
-      PBs {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated,{" "}
-      {sync.result.skipped} unchanged, {sync.result.history_inserted} history rows,{" "}
-      {sync.result.snapshots_inserted} snapshot.
+      PBs {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated, {sync.result.skipped} unchanged, {sync.result.history_inserted} history rows, {sync.result.snapshots_inserted} snapshot.
     </p>
   );
 }
@@ -804,6 +1089,10 @@ function Pagination({
   );
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
 function formatTime(ms: number | null) {
   if (ms === null) {
     return "N/A";
@@ -815,9 +1104,20 @@ function formatTime(ms: number | null) {
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
 }
 
+function formatGap(ms: number | null) {
+  if (ms === null) {
+    return "N/A";
+  }
+  return `${Math.round(ms)} ms`;
+}
+
+function formatPercent(value: number) {
+  return `${value.toFixed(1)}%`;
+}
+
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "short",
+    dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
 }
@@ -833,6 +1133,54 @@ function formatPosition(map: MapListItem) {
     return "Failed";
   }
   return map.required_position ? `#${map.required_position}` : "Not synced";
+}
+
+function formatPositionSummary(map: SummaryMapItem) {
+  if (map.position_status === "over_10000") {
+    return "10k+ threshold";
+  }
+  if (map.required_position) {
+    return `Warrior at #${map.required_position}`;
+  }
+  return "Position not synced";
+}
+
+function formatStatusLabel(status: string) {
+  switch (status) {
+    case "success":
+      return "Success";
+    case "partial":
+      return "Partial";
+    case "failed":
+      return "Failed";
+    case "running":
+      return "Running";
+    default:
+      return "Idle";
+  }
+}
+
+function formatSyncJobDetail(job: LatestSyncJobSummary | null) {
+  if (!job) {
+    return "No sync recorded yet.";
+  }
+
+  const successPart =
+    job.items_total !== null && job.items_success !== null ? `${job.items_success} / ${job.items_total} items processed.` : "Run not fully recorded.";
+  if (job.status === "failed" && job.error_message) {
+    return job.error_message;
+  }
+  if (job.status === "partial" && job.error_message) {
+    return `${successPart} ${job.error_message}`;
+  }
+  return successPart;
+}
+
+function formatPositionProgress(progress: PositionProgress | null) {
+  if (!progress) {
+    return "Warrior position sync is running...";
+  }
+  return `Warrior position sync is running: ${progress.processed} / ${progress.total}, ${progress.exact} exact, ${progress.over_10000} over 10k.`;
 }
 
 function cleanTrackmaniaText(value: string | null) {
