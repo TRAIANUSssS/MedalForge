@@ -48,6 +48,15 @@ Frontend runs at:
 http://localhost:5173
 ```
 
+Useful frontend routes during local work:
+
+```text
+/                   Progress entry / landing page
+/dashboard          Main dashboard
+/design-playground  UI playground / design sandbox
+/playground         Alias route for the design sandbox
+```
+
 ## Verification
 
 Backend import, DB creation, and health endpoint:
@@ -73,6 +82,15 @@ Frontend build:
 ```powershell
 cd frontend
 npm run build
+```
+
+Frontend route smoke check:
+
+```text
+Open the browser at:
+- http://localhost:5173/
+- http://localhost:5173/dashboard
+- http://localhost:5173/design-playground
 ```
 
 ## Warrior Data Sync

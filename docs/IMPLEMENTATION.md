@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6: Dashboard MVP.
+- Sprint 6.1: Frontend visual foundation and production entry flow.
 
 ## Stage Checklist
 
@@ -30,6 +30,7 @@ Current focus:
 | Sprint 4.1: Top-only position sync | Done | Use `/top` only, store exact/10k+ status, avoid re-syncing stable over_10000 rows, show progress | Full position sync completed successfully |
 | Sprint 5: Player PB sync | Done | Trackmania OAuth, official map-records PB sync, PB records, history, progress snapshots, PB sync UI action | Maps table can show real player PB status after OAuth sync |
 | Sprint 6: Dashboard MVP | Done | Summary API, progress hero, dashboard blocks, empty/error/loading states | Dashboard shows real PB progress and sync status |
+| Sprint 6.1: Frontend visual foundation | Done | Design playground, manual frontend routing, progress entry page, reusable hero Warrior progress bar | Frontend opens on `/`, dashboard remains on `/dashboard`, `npm run build` |
 
 ## Completed Notes
 
@@ -363,3 +364,51 @@ npm run build
 Next practical step:
 
 - Sprint 7: Stats page and broader breakdowns, using the new summary/service foundation without duplicating dashboard logic.
+
+### Sprint 6.1: Frontend Visual Foundation
+
+Status: Done
+
+Implemented:
+
+- `frontend/src/app/App.tsx` now resolves the current MVP frontend route structure:
+  - `/` -> `ProgressEntryPage`;
+  - `/dashboard` -> `DashboardPage`;
+  - `/design-playground` -> `DesignPlaygroundPage`;
+  - `/playground` -> alias to the same design sandbox.
+- `frontend/src/pages/ProgressEntryPage.tsx` as the first production-facing entry screen.
+- `frontend/src/components/progress/WarriorProgressBar.tsx` as a reusable global Warrior completion component.
+- `frontend/src/pages/DesignPlaygroundPage.tsx` refined into a dedicated mock-only design sandbox for visual-language iteration.
+- `frontend/src/styles.css` expanded with:
+  - atmospheric playground utilities;
+  - progress-entry hero styling;
+  - `warrior-progress-*` classes for the signature global completion bar.
+
+Behavior:
+
+- the frontend now opens on a cinematic Warrior progress entry page before the dashboard;
+- `Open Dashboard` routes into the real dashboard;
+- the design playground remains intentionally isolated from backend/API calls;
+- the warm energy-edge progress treatment is reserved for global Warrior completion and should not be reused as a generic bar style.
+
+Verification:
+
+```powershell
+cd frontend
+npm run build
+```
+
+Manual route checks:
+
+```text
+/
+/dashboard
+/design-playground
+/playground
+```
+
+Notes:
+
+- no backend contracts changed in this pass;
+- frontend navigation remains intentionally lightweight and local-history based for the MVP stage;
+- the design sandbox is the source of visual experiments before they are promoted into production pages.

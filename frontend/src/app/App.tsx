@@ -2,13 +2,23 @@ import { useEffect, useState } from "react";
 
 import { DashboardPage } from "../pages/DashboardPage";
 import { DesignPlaygroundPage } from "../pages/DesignPlaygroundPage";
+import { ProgressEntryPage } from "../pages/ProgressEntryPage";
 
-type AppRoute = "dashboard" | "design-playground";
+type AppRoute = "progress-entry" | "dashboard" | "design-playground";
 
 const PLAYGROUND_PATHS = new Set(["/design-playground", "/playground"]);
+const DASHBOARD_PATHS = new Set(["/dashboard"]);
 
 function resolveRoute(pathname: string): AppRoute {
-  return PLAYGROUND_PATHS.has(pathname) ? "design-playground" : "dashboard";
+  if (PLAYGROUND_PATHS.has(pathname)) {
+    return "design-playground";
+  }
+
+  if (DASHBOARD_PATHS.has(pathname)) {
+    return "dashboard";
+  }
+
+  return "progress-entry";
 }
 
 export function App() {
@@ -40,5 +50,9 @@ export function App() {
     return <DesignPlaygroundPage onNavigate={navigate} />;
   }
 
-  return <DashboardPage onNavigate={navigate} />;
+  if (route === "dashboard") {
+    return <DashboardPage onNavigate={navigate} />;
+  }
+
+  return <ProgressEntryPage onNavigate={navigate} />;
 }

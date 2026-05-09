@@ -8,6 +8,7 @@ Start here:
 Reference docs:
 
 - [Architecture](ARCHITECTURE.md)
+- [Frontend UI](FRONTEND_UI.md)
 - [API](API.md)
 - [Runbook](RUNBOOK.md)
 - [Decisions](DECISIONS.md)

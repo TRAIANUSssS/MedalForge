@@ -20,7 +20,11 @@ backend/
 frontend/
   src/
     api/            HTTP client functions
-    app/            application shell
+    app/            application shell and small history router
+    components/
+      playground/   mock-only UI lab building blocks
+      progress/     reusable production progress components
+    pages/          route-level pages
 ```
 
 ## Backend
@@ -99,9 +103,24 @@ The frontend should consume backend contracts only. It should treat backend resp
 
 Current frontend is a shell with:
 
-- sidebar navigation placeholders;
-- summary placeholders;
-- backend health badge.
+- history-based route resolution in `frontend/src/app/App.tsx`;
+- production entry screen at `/`;
+- dashboard page at `/dashboard`;
+- design sandbox at `/design-playground` and `/playground`;
+- reusable `WarriorProgressBar` hero component for global completion presentation.
+
+Current frontend route model:
+
+- `/` -> `ProgressEntryPage`
+- `/dashboard` -> `DashboardPage`
+- `/design-playground` -> `DesignPlaygroundPage`
+- `/playground` -> `DesignPlaygroundPage`
+
+Current frontend UI split:
+
+- `ProgressEntryPage` is intentionally minimal and atmospheric, with one central progress artifact.
+- `DashboardPage` is the main backend-driven MVP surface.
+- `DesignPlaygroundPage` stays mock-only and is used to refine the visual language before promoting ideas into production pages.
 
 ## MVP Boundaries
 

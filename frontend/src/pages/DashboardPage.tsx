@@ -79,7 +79,7 @@ type PositionProgress = {
 };
 
 const navItems: Array<{ label: string; route?: string }> = [
-  { label: "Dashboard", route: "/" },
+  { label: "Dashboard", route: "/dashboard" },
   { label: "Maps" },
   { label: "Stats" },
   { label: "Charts" },

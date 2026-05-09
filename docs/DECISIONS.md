@@ -194,3 +194,23 @@ Consequences:
 - `POST /api/sync/player-pbs` requires a connected Trackmania account.
 - Frontend Settings/Account UI owns connect/disconnect/status actions.
 - `NADEO_CORE_TOKEN` and `NADEO_ACCOUNT_ID` are legacy and not used for PB sync.
+
+## 2026-05-09: Frontend Uses Progress Entry Plus Design Sandbox
+
+Decision:
+
+- Open the frontend on a dedicated progress entry page at `/`.
+- Keep the real dashboard at `/dashboard`.
+- Preserve a separate design sandbox at `/design-playground` with `/playground` as an alias.
+
+Why:
+
+- The project needs a production-facing first impression before the dense dashboard.
+- The design language is still evolving and needs an isolated sandbox that does not disturb backend-driven pages.
+- A lightweight manual router is enough for the current MVP stage.
+
+Consequences:
+
+- Production-facing hero progress work now lives separately from dashboard blocks.
+- The design playground remains mock-only and should not make backend requests.
+- If route complexity grows later, the project can adopt a fuller routing layer without changing the current page split.

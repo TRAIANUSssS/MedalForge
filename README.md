@@ -22,6 +22,8 @@ Sprint 1 scaffold:
 - Sprint 4 started: `POST /api/sync/warrior-positions` for Nadeo Live required positions
 - Sprint 4.1 positions: `/top`-only sync, exact positions, `10k+` placeholder, progress display
 - Sprint 5 player PB sync: Trackmania OAuth, `POST /api/sync/player-pbs`, PB history, progress snapshots
+- Sprint 6 dashboard MVP: summary API, dashboard blocks, loading/error/empty states
+- Frontend visual foundation: design playground, progress entry page, reusable hero `WarriorProgressBar`
 
 ## Backend
 
@@ -71,6 +73,15 @@ Frontend URL:
 
 ```text
 http://localhost:5173
+```
+
+Frontend routes:
+
+```text
+/                   Progress entry / landing page
+/dashboard          Real dashboard page
+/design-playground  UI playground / design sandbox
+/playground         Alias route for the design sandbox
 ```
 
 ## Next Step

@@ -90,7 +90,7 @@ export function DesignPlaygroundPage({ onNavigate }: { onNavigate: (path: string
               <button
                 className="rounded-full border border-cyan-200/28 bg-[#2bc4ff]/12 px-5 py-3 text-sm font-semibold text-cyan-50 shadow-[0_0_30px_rgba(43,196,255,0.14)] transition duration-200 hover:-translate-y-0.5 hover:border-cyan-100/40 hover:bg-[#2bc4ff]/18 hover:shadow-[0_0_38px_rgba(43,196,255,0.18)]"
                 type="button"
-                onClick={() => onNavigate("/")}
+                onClick={() => onNavigate("/dashboard")}
               >
                 Back to dashboard
               </button>
