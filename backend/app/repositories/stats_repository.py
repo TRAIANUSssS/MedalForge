@@ -146,7 +146,12 @@ def _summary_maps_statement(*, account_id: str | None) -> Select:
     warrior_position = (
         select(
             MapPosition.map_uid.label("map_uid"),
-            func.max(MapPosition.world_position).label("required_position"),
+            func.max(
+                case(
+                    (MapPosition.position_status == "over_10000", 10_000),
+                    else_=MapPosition.world_position,
+                )
+            ).label("required_position"),
             func.max(MapPosition.position_status).label("position_status"),
             func.max(
                 case(

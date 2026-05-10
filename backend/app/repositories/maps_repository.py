@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import Select, asc, desc, func, or_, select
+from sqlalchemy import Select, asc, case, desc, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.map_position import MapPosition
@@ -35,7 +35,12 @@ def list_maps(
     warrior_position = (
         select(
             MapPosition.map_uid.label("map_uid"),
-            func.max(MapPosition.world_position).label("required_position"),
+            func.max(
+                case(
+                    (MapPosition.position_status == "over_10000", 10_000),
+                    else_=MapPosition.world_position,
+                )
+            ).label("required_position"),
             func.max(MapPosition.position_status).label("position_status"),
         )
         .where(MapPosition.position_type == "warrior")

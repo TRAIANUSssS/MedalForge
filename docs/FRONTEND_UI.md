@@ -10,6 +10,8 @@ Routes:
 
 - `/` - `ProgressEntryPage`
 - `/dashboard` - `DashboardPage`
+- `/maps` - `MapsPage`
+- `/settings` - `SettingsPage`
 - `/design-playground` - `DesignPlaygroundPage`
 - `/playground` - alias for `DesignPlaygroundPage`
 
@@ -46,8 +48,53 @@ File:
 Purpose:
 
 - main data-driven MVP page;
-- consume backend summary and sync endpoints;
-- show progress, close medals, quick wins, sync visibility, and map-table workflow.
+- consume backend summary data;
+- show progress, freshness, close medals, quick wins, and best margins;
+- stay overview-first, with heavy controls moved out into dedicated workspaces.
+
+Current characteristics:
+
+- fixed desktop sidebar layout shared with the other production workspaces;
+- hero overall progress bar plus compact sticky progress inside the sidebar;
+- compact map recommendation cards without campaign/company chips;
+- links users into `Maps` for the full database table and into `Settings` for sync/account actions.
+
+### Maps Page
+
+File:
+
+- `frontend/src/pages/MapsPage.tsx`
+
+Purpose:
+
+- dedicated local Warrior maps workspace;
+- own the searchable/filterable/paginated maps table;
+- keep full table density away from the dashboard overview.
+
+Current characteristics:
+
+- fixed desktop sidebar layout consistent with dashboard/settings;
+- filters for category, status, search, sorting, and pagination;
+- semantic row highlighting for earned, close, and not-played states;
+- campaign metadata stays visible here, unlike compact dashboard cards.
+
+### Settings Page
+
+File:
+
+- `frontend/src/pages/SettingsPage.tsx`
+
+Purpose:
+
+- dedicated workspace for sync and Trackmania account controls;
+- expose sync status, latest jobs, and OAuth connection state without crowding the dashboard.
+
+Current characteristics:
+
+- fixed desktop sidebar layout consistent with dashboard/maps;
+- sync control cards for Warrior data, positions, and PB sync;
+- Trackmania OAuth connect/disconnect/check actions;
+- latest sync status block lives here instead of on the main dashboard.
 
 ### Design Playground
 
@@ -99,7 +146,9 @@ The current frontend visual language is intentionally:
 Key rules that now exist in code:
 
 - `ProgressEntryPage` should feel cinematic and singular.
-- `DashboardPage` should feel information-dense but still premium.
+- `DashboardPage` should stay overview-first, not turn back into a mixed settings/table screen.
+- `MapsPage` owns the full maps database workflow.
+- `SettingsPage` owns sync/account actions and detailed sync status.
 - `DesignPlaygroundPage` remains the safe place to test future surface, typography, and interaction ideas before production adoption.
 
 ## Styling Notes

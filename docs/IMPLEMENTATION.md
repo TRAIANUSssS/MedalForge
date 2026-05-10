@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.1: Frontend visual foundation and production entry flow.
+- Sprint 6.2: Frontend workspace split and dashboard polish.
 
 ## Stage Checklist
 
@@ -29,8 +29,9 @@ Current focus:
 | Sprint 4: Warrior positions | Superseded | Batch position endpoint returned `[]`; moved to `/top`-only strategy | See Sprint 4.1 |
 | Sprint 4.1: Top-only position sync | Done | Use `/top` only, store exact/10k+ status, avoid re-syncing stable over_10000 rows, show progress | Full position sync completed successfully |
 | Sprint 5: Player PB sync | Done | Trackmania OAuth, official map-records PB sync, PB records, history, progress snapshots, PB sync UI action | Maps table can show real player PB status after OAuth sync |
-| Sprint 6: Dashboard MVP | Done | Summary API, progress hero, dashboard blocks, empty/error/loading states | Dashboard shows real PB progress and sync status |
+| Sprint 6: Dashboard MVP | Done | Summary API, progress hero, dashboard blocks, empty/error/loading states | Dashboard shows real PB progress and overview recommendations |
 | Sprint 6.1: Frontend visual foundation | Done | Design playground, manual frontend routing, progress entry page, reusable hero Warrior progress bar | Frontend opens on `/`, dashboard remains on `/dashboard`, `npm run build` |
+| Sprint 6.2: Workspace split and dashboard polish | Done | Separate `Maps` and `Settings` workspaces, fixed shared sidebar, compact sticky progress, dashboard visual polish | `/dashboard`, `/maps`, `/settings` open correctly and `npm run build` passes |
 
 ## Completed Notes
 
@@ -338,11 +339,10 @@ Implemented:
   - close medals block;
   - quick wins block;
   - best margins block;
-  - sync status block;
   - loading skeleton;
   - error state;
   - empty state when PBs are not synced yet.
-- Existing maps table, filters, sync controls, and Trackmania account actions remain available.
+- Existing maps table, filters, sync controls, and Trackmania account actions remain available through dedicated workspaces.
 
 Verification:
 
@@ -364,6 +364,54 @@ npm run build
 Next practical step:
 
 - Sprint 7: Stats page and broader breakdowns, using the new summary/service foundation without duplicating dashboard logic.
+
+### Sprint 6.2: Workspace Split and Dashboard Polish
+
+Status: Done
+
+Implemented:
+
+- `frontend/src/app/App.tsx` now exposes the current production workspace routes:
+  - `/` -> `ProgressEntryPage`;
+  - `/dashboard` -> `DashboardPage`;
+  - `/maps` -> `MapsPage`;
+  - `/settings` -> `SettingsPage`;
+  - `/design-playground` -> `DesignPlaygroundPage`;
+  - `/playground` -> alias to the same design sandbox.
+- `DashboardPage` was reduced back to an overview-first surface:
+  - keeps overall progress, compact metrics, freshness, close medals, quick wins, and best margins;
+  - removes the full maps table from the dashboard;
+  - removes sync/account controls from the dashboard.
+- `MapsPage` now owns:
+  - the full maps database table;
+  - filters, search, sorting, and pagination;
+  - table-specific semantic row polish.
+- `SettingsPage` now owns:
+  - sync controls;
+  - Trackmania OAuth account actions;
+  - latest sync status and job visibility.
+- `AppSidebar` is now shared across production workspaces with:
+  - fixed desktop sidebar layout;
+  - compact sticky-progress card;
+  - navigation to Dashboard, Maps, Settings, and Design Playground.
+
+Verification:
+
+```powershell
+cd frontend
+npm run build
+```
+
+Manual route checks:
+
+```text
+/
+/dashboard
+/maps
+/settings
+/design-playground
+/playground
+```
 
 ### Sprint 6.1: Frontend Visual Foundation
 

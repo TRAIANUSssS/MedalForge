@@ -106,6 +106,8 @@ Current frontend is a shell with:
 - history-based route resolution in `frontend/src/app/App.tsx`;
 - production entry screen at `/`;
 - dashboard page at `/dashboard`;
+- maps workspace at `/maps`;
+- settings workspace at `/settings`;
 - design sandbox at `/design-playground` and `/playground`;
 - reusable `WarriorProgressBar` hero component for global completion presentation.
 
@@ -113,14 +115,24 @@ Current frontend route model:
 
 - `/` -> `ProgressEntryPage`
 - `/dashboard` -> `DashboardPage`
+- `/maps` -> `MapsPage`
+- `/settings` -> `SettingsPage`
 - `/design-playground` -> `DesignPlaygroundPage`
 - `/playground` -> `DesignPlaygroundPage`
 
 Current frontend UI split:
 
 - `ProgressEntryPage` is intentionally minimal and atmospheric, with one central progress artifact.
-- `DashboardPage` is the main backend-driven MVP surface.
+- `DashboardPage` is the main backend-driven overview surface.
+- `MapsPage` owns the full maps table, filters, sorting, and pagination.
+- `SettingsPage` owns sync controls, Trackmania OAuth state, and latest sync-job visibility.
 - `DesignPlaygroundPage` stays mock-only and is used to refine the visual language before promoting ideas into production pages.
+
+Current production workspace layout:
+
+- desktop uses a fixed left sidebar shell with shared navigation and sticky-progress visibility;
+- main workspace content is offset from the fixed sidebar instead of using a sticky split grid;
+- mobile/tablet keeps the sidebar as a normal top block.
 
 ## MVP Boundaries
 

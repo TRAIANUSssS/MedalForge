@@ -53,6 +53,8 @@ Useful frontend routes during local work:
 ```text
 /                   Progress entry / landing page
 /dashboard          Main dashboard
+/maps               Maps workspace
+/settings           Settings workspace
 /design-playground  UI playground / design sandbox
 /playground         Alias route for the design sandbox
 ```
@@ -90,6 +92,8 @@ Frontend route smoke check:
 Open the browser at:
 - http://localhost:5173/
 - http://localhost:5173/dashboard
+- http://localhost:5173/maps
+- http://localhost:5173/settings
 - http://localhost:5173/design-playground
 ```
 

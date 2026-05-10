@@ -10,7 +10,7 @@ const difficultyClasses: Record<string, string> = {
 export function DifficultyBadge({ tier }: { tier: string }) {
   return (
     <span
-      className={`inline-flex min-h-8 items-center rounded-full border px-3 font-mono text-[11px] font-bold uppercase tracking-[0.2em] ${
+      className={`inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full border px-[14px] font-mono text-[11px] font-bold uppercase leading-none tracking-[0.2em] ${
         difficultyClasses[tier] ?? "border-slate-400/20 bg-slate-400/10 text-slate-200"
       }`}
     >

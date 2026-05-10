@@ -234,11 +234,10 @@ tm-warrior-dashboard/
         settings/
       pages/
         DashboardPage.tsx
-        MapsTablePage.tsx
-        StatsPage.tsx
-        ChartsPage.tsx
-        GrindQueuePage.tsx
+        MapsPage.tsx
         SettingsPage.tsx
+        DesignPlaygroundPage.tsx
+        ProgressEntryPage.tsx
       types/
         map.ts
         stats.ts
@@ -252,6 +251,23 @@ tm-warrior-dashboard/
   PROJECT_PLAN.md
   README.md
 ```
+
+Current frontend route reality in the repository:
+
+```text
+/                   -> ProgressEntryPage
+/dashboard          -> DashboardPage
+/maps               -> MapsPage
+/settings           -> SettingsPage
+/design-playground  -> DesignPlaygroundPage
+/playground         -> DesignPlaygroundPage
+```
+
+Current workspace split:
+
+- Dashboard is overview-first.
+- Maps owns the full maps database table.
+- Settings owns sync controls and sync/account visibility.
 
 ---
 

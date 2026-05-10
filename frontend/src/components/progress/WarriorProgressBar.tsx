@@ -7,6 +7,8 @@ type WarriorProgressBarProps = {
   showFlame?: boolean;
   animated?: boolean;
   showPercentage?: boolean;
+  compact?: boolean;
+  minimumVisibleFillPx?: number;
 };
 
 export function WarriorProgressBar({
@@ -16,6 +18,8 @@ export function WarriorProgressBar({
   showFlame = true,
   animated = true,
   showPercentage = true,
+  compact = false,
+  minimumVisibleFillPx = 0,
 }: WarriorProgressBarProps) {
   const percentage = useMemo(() => {
     if (total <= 0) {
@@ -76,7 +80,7 @@ export function WarriorProgressBar({
         aria-valuemax={total}
         aria-valuemin={0}
         aria-valuenow={earned}
-        className="warrior-progress-track"
+        className={`warrior-progress-track ${compact ? "warrior-progress-track--mini" : ""}`}
         role="progressbar"
       >
         {showPercentage ? (
@@ -84,7 +88,13 @@ export function WarriorProgressBar({
             {displayedPercentage.toFixed(1)}%
           </div>
         ) : null}
-        <div className="warrior-progress-fill-shell" style={{ width: `${displayedProgress}%` }}>
+        <div
+          className="warrior-progress-fill-shell"
+          style={{
+            width: `${displayedProgress}%`,
+            minWidth: displayedProgress > 0 && minimumVisibleFillPx > 0 ? `${minimumVisibleFillPx}px` : undefined,
+          }}
+        >
           <div className="warrior-progress-fill" />
           {showFlame ? (
             <>
