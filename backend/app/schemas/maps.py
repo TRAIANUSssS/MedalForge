@@ -33,7 +33,7 @@ class MapListItem(BaseModel):
 class MapsResponse(BaseModel):
     items: list[MapListItem]
     total: int
-    limit: int = Field(ge=1, le=500)
+    limit: int = Field(ge=1, le=10000)
     offset: int = Field(ge=0)
 
 

@@ -23,7 +23,7 @@ def get_maps(
     search: str | None = None,
     sort: str = "name",
     order: Literal["asc", "desc"] = "asc",
-    limit: int = Query(default=100, ge=1, le=500),
+    limit: int = Query(default=100, ge=1, le=10000),
     offset: int = Query(default=0, ge=0),
     db: Session = Depends(get_db),
 ) -> dict:

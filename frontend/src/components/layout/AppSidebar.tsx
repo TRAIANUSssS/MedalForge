@@ -100,6 +100,34 @@ export function AppSidebar({
             <span className="font-semibold tabular-nums text-cyan-100">{percentage.toFixed(1)}%</span>
           </div>
         </div>
+
+        <div className="relative mt-4 overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-4 backdrop-blur-md">
+          <div className="playground-atmospheric-bloom-soft pointer-events-none absolute left-[-1rem] top-[-1rem] h-20 w-20 rounded-full opacity-45 blur-2xl" />
+          <p className="relative font-mono text-xs font-black uppercase tracking-[0.28em] text-sky-50/56">
+            TARGETS
+          </p>
+          <p className="relative mt-2 text-sm leading-6 text-sky-100/66">
+            Generate a new random challenge set for the dashboard block.
+          </p>
+          <button
+            className="relative mt-4 w-full rounded-full border border-cyan-200/24 bg-[#2bc4ff]/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition duration-200 hover:-translate-y-0.5 hover:border-cyan-100/36 hover:bg-[#2bc4ff]/16 hover:shadow-[0_12px_28px_rgba(43,196,255,0.12)]"
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("medalforge:reroll-challenge-targets"));
+            }}
+          >
+            Reroll targets
+          </button>
+          <button
+            className="relative mt-2 w-full rounded-full border border-white/14 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-sky-50/84 transition duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.06]"
+            type="button"
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("medalforge:reroll-edge-challenge-targets"));
+            }}
+          >
+            Reroll 0-3 targets
+          </button>
+        </div>
       </div>
     </div>
   );

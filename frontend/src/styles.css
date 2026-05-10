@@ -904,6 +904,43 @@ td span {
   content: "";
 }
 
+.playground-cta-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.playground-cta-shimmer::after {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  left: 0;
+  width: 82%;
+  border-radius: 999px;
+  background:
+    linear-gradient(100deg, transparent 0%, rgb(255 255 255 / 0.00) 24%, rgb(255 255 255 / 0.10) 42%, rgb(255 255 255 / 0.18) 50%, rgb(255 255 255 / 0.10) 58%, rgb(255 255 255 / 0.00) 76%, transparent 100%);
+  transform: translateX(-150%) skewX(-18deg);
+  transform-origin: center;
+  animation: playground-cta-shimmer 3.2s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  content: "";
+  pointer-events: none;
+}
+
+@keyframes playground-cta-shimmer {
+  from {
+    transform: translateX(-150%) skewX(-18deg);
+    opacity: 0.32;
+  }
+
+  50% {
+    opacity: 0.54;
+  }
+
+  to {
+    transform: translateX(150%) skewX(-18deg);
+    opacity: 0.32;
+  }
+}
+
 .warrior-progress-track {
   position: relative;
   min-height: 66px;
@@ -1127,6 +1164,7 @@ td span {
   .warrior-progress-fill::before,
   .warrior-progress-heat,
   .warrior-progress-flare,
+  .playground-cta-shimmer::after,
   .hero-breathe-slow,
   .hero-breathe-slower {
     animation: none;

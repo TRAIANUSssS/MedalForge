@@ -57,6 +57,10 @@ Current characteristics:
 - fixed desktop sidebar layout shared with the other production workspaces;
 - hero overall progress bar plus compact sticky progress inside the sidebar;
 - compact map recommendation cards without campaign/company chips;
+- `CHALLENGE YOURSELF` target block directly under the summary stats grid;
+- three compact daily target rows plus one weekly challenge card;
+- dashboard-local target persistence through `localStorage`;
+- sidebar actions for normal reroll and edge-case `0-3 targets` reroll.
 - links users into `Maps` for the full database table and into `Settings` for sync/account actions.
 
 ### Maps Page
@@ -107,6 +111,12 @@ Purpose:
 - visual language lab for components, surfaces, hierarchy, motion, and states;
 - mock-only page with no backend/API dependency;
 - source for styling patterns before they move into production pages.
+
+Current characteristics:
+
+- contains the current `Priority 1 Target Cards` reference layout;
+- daily target rows use compact one-line chips, compact stat pills, and shared `BEAT NOW` CTA styling;
+- weekly challenge and completion/placeholder states are explored here before dashboard adoption.
 
 ## Reusable UI Building Blocks
 
@@ -162,6 +172,7 @@ It currently contains:
 - application shell styles for the existing dashboard layout;
 - playground-specific utility classes such as telemetry grid and atmospheric bloom;
 - `warrior-progress-*` classes for the entry-page hero progress artifact;
+- shared `playground-cta-shimmer` helper used by `BEAT NOW` buttons in playground and dashboard target cards;
 - slow background-breathing helpers used only where safe.
 
 When adding new production UI:

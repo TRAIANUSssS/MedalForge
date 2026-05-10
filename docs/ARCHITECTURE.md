@@ -123,7 +123,8 @@ Current frontend route model:
 Current frontend UI split:
 
 - `ProgressEntryPage` is intentionally minimal and atmospheric, with one central progress artifact.
-- `DashboardPage` is the main backend-driven overview surface.
+- `DashboardPage` is the main backend-driven overview surface and now includes a frontend-generated
+  `CHALLENGE YOURSELF` block backed by existing `/api/maps` data.
 - `MapsPage` owns the full maps table, filters, sorting, and pagination.
 - `SettingsPage` owns sync controls, Trackmania OAuth state, and latest sync-job visibility.
 - `DesignPlaygroundPage` stays mock-only and is used to refine the visual language before promoting ideas into production pages.
@@ -133,6 +134,15 @@ Current production workspace layout:
 - desktop uses a fixed left sidebar shell with shared navigation and sticky-progress visibility;
 - main workspace content is offset from the fixed sidebar instead of using a sticky split grid;
 - mobile/tablet keeps the sidebar as a normal top block.
+
+Current dashboard target-card flow:
+
+- the dashboard fetches maps through the existing `GET /api/maps` endpoint;
+- target-card selection is frontend-only and does not have a dedicated backend endpoint yet;
+- standard reroll selects normal missing/not-earned targets;
+- edge-case reroll can intentionally generate `0-3` real targets to test late-progress states;
+- selection is persisted in browser `localStorage`;
+- sidebar actions communicate with the dashboard through browser `CustomEvent`s instead of a global state library.
 
 ## MVP Boundaries
 

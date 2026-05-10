@@ -10,7 +10,7 @@ Local Trackmania Warrior Medals dashboard.
 
 ## Current State
 
-Sprint 1 scaffold:
+Current delivered state:
 
 - FastAPI backend with `GET /api/health`
 - SQLite initialization on backend startup
@@ -24,6 +24,17 @@ Sprint 1 scaffold:
 - Sprint 5 player PB sync: Trackmania OAuth, `POST /api/sync/player-pbs`, PB history, progress snapshots
 - Sprint 6 dashboard MVP: summary API, dashboard blocks, loading/error/empty states
 - Frontend visual foundation: design playground, progress entry page, reusable hero `WarriorProgressBar`
+- Production workspace split:
+  - `/dashboard`
+  - `/maps`
+  - `/settings`
+  - `/design-playground`
+- Dashboard `CHALLENGE YOURSELF` block:
+  - 3 compact daily target rows
+  - 1 weekly challenge card
+  - sidebar reroll actions
+  - localStorage persistence
+  - late-progress edge-case completion state
 
 ## Backend
 
@@ -80,6 +91,8 @@ Frontend routes:
 ```text
 /                   Progress entry / landing page
 /dashboard          Real dashboard page
+/maps               Maps workspace
+/settings           Settings workspace
 /design-playground  UI playground / design sandbox
 /playground         Alias route for the design sandbox
 ```

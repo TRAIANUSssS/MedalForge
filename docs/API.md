@@ -57,7 +57,7 @@ category=...
 search=...
 sort=name|warrior_time_ms|author_time_ms|category|campaign_name|created_at|updated_at
 order=asc|desc
-limit=100
+limit=100 (current backend validation allows up to 10000)
 offset=0
 ```
 

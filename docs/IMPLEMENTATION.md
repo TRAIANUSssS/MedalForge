@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.2: Frontend workspace split and dashboard polish.
+- Sprint 6.3: Dashboard target-card integration and late-progress edge states.
 
 ## Stage Checklist
 
@@ -32,6 +32,7 @@ Current focus:
 | Sprint 6: Dashboard MVP | Done | Summary API, progress hero, dashboard blocks, empty/error/loading states | Dashboard shows real PB progress and overview recommendations |
 | Sprint 6.1: Frontend visual foundation | Done | Design playground, manual frontend routing, progress entry page, reusable hero Warrior progress bar | Frontend opens on `/`, dashboard remains on `/dashboard`, `npm run build` |
 | Sprint 6.2: Workspace split and dashboard polish | Done | Separate `Maps` and `Settings` workspaces, fixed shared sidebar, compact sticky progress, dashboard visual polish | `/dashboard`, `/maps`, `/settings` open correctly and `npm run build` passes |
+| Sprint 6.3: Challenge target cards | Done | Dashboard `CHALLENGE YOURSELF` block, sidebar reroll actions, localStorage persistence, completion placeholders/celebration state | `/dashboard` shows 3 daily rows + 1 weekly card, reroll works, build passes |
 
 ## Completed Notes
 
@@ -411,6 +412,55 @@ Manual route checks:
 /settings
 /design-playground
 /playground
+```
+
+### Sprint 6.3: Challenge Target Cards
+
+Status: Done
+
+Implemented:
+
+- `DashboardPage` now includes a production `CHALLENGE YOURSELF` block directly under the summary stat grid.
+- The block uses the existing `GET /api/maps` data and does not require a new backend endpoint.
+- Standard dashboard layout:
+  - 3 compact daily target rows;
+  - 1 weekly challenge card.
+- Sidebar actions:
+  - `Reroll targets` for the normal next-day / next-week scenario;
+  - `Reroll 0-3 targets` for late-progress edge-case testing.
+- Browser-event wiring instead of global state:
+  - `medalforge:reroll-challenge-targets`;
+  - `medalforge:reroll-edge-challenge-targets`.
+- Browser persistence:
+  - `localStorage` key `medalforge.dashboard.challengeTargets.v1`.
+- Edge-case completion flow:
+  - placeholder daily cards when there are fewer than 3 real daily targets;
+  - celebration / completion card when the edge reroll returns 0 real targets.
+- Shared `BEAT NOW` CTA shimmer styling moved into reusable frontend styling and used in production.
+
+Behavior:
+
+- normal reroll selects not-earned Warrior targets from the standard missing pool;
+- weekly challenge prefers `Hard`, `Insane`, and `Demon` maps, with random fallback if those are unavailable;
+- edge-case reroll intentionally returns 0 to 3 real maps, then:
+  - sends the hardest real card to Weekly Challenge;
+  - fills the remaining daily slots with placeholders in fixed order.
+
+Verification:
+
+```powershell
+cd frontend
+npm run build
+```
+
+Manual checks:
+
+```text
+/dashboard
+- verify CHALLENGE YOURSELF appears below the summary stat grid
+- reload and confirm target persistence
+- use sidebar reroll buttons and confirm the block updates
+- use edge reroll and confirm placeholders / completion state
 ```
 
 ### Sprint 6.1: Frontend Visual Foundation
