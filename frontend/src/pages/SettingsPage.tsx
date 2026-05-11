@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { toPng } from "html-to-image";
 
 import {
   disconnectTrackmaniaAuth,
@@ -22,6 +21,7 @@ import {
   type WarriorSyncResponse,
 } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
+import { capturePageAsPng } from "../utils/pageCapture";
 
 type HealthState =
   | { status: "loading" }
@@ -234,20 +234,10 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
     if (!pageRef.current || captureState === "running") return;
     setCaptureState("running");
     try {
-      const node = pageRef.current;
-      const dataUrl = await toPng(node, {
-        cacheBust: true,
-        pixelRatio: 2,
-        width: node.scrollWidth,
-        height: node.scrollHeight,
-        canvasWidth: node.scrollWidth * 2,
-        canvasHeight: node.scrollHeight * 2,
-      });
-
-      const link = document.createElement("a");
-      link.download = `medalforge-settings-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`;
-      link.href = dataUrl;
-      link.click();
+      await capturePageAsPng(
+        pageRef.current,
+        `medalforge-settings-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`,
+      );
       setCaptureState("done");
       window.setTimeout(() => setCaptureState("idle"), 1800);
     } catch {

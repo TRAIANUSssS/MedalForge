@@ -1,5 +1,4 @@
 import { useRef, useState, type ReactNode } from "react";
-import { toPng } from "html-to-image";
 
 import { ActivityFeedItem } from "../components/playground/ActivityFeedItem";
 import { DesignSection } from "../components/playground/DesignSection";
@@ -17,6 +16,7 @@ import {
   metricCards,
   recommendationCards,
 } from "../components/playground/mockData";
+import { capturePageAsPng } from "../utils/pageCapture";
 
 const primarySidebarItems = ["Dashboard", "Maps", "Stats", "Charts", "Grind Queue"];
 const utilitySidebarItems = ["Settings", "Design Playground"];
@@ -85,20 +85,10 @@ export function DesignPlaygroundPage({ onNavigate }: { onNavigate: (path: string
     setCaptureState("running");
 
     try {
-      const node = pageRef.current;
-      const dataUrl = await toPng(node, {
-        cacheBust: true,
-        pixelRatio: 2,
-        width: node.scrollWidth,
-        height: node.scrollHeight,
-        canvasWidth: node.scrollWidth * 2,
-        canvasHeight: node.scrollHeight * 2,
-      });
-
-      const link = document.createElement("a");
-      link.download = `medalforge-design-playground-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`;
-      link.href = dataUrl;
-      link.click();
+      await capturePageAsPng(
+        pageRef.current,
+        `medalforge-design-playground-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`,
+      );
       setCaptureState("done");
       window.setTimeout(() => setCaptureState("idle"), 1800);
     } catch {

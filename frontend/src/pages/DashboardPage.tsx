@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { toPng } from "html-to-image";
 
 import { getHealth, getMaps, getStatsSummary, type HealthResponse, type LatestSyncJobSummary, type MapListItem, type StatsSummaryResponse, type SummaryMapItem } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
+import { ActivityFeedItem } from "../components/playground/ActivityFeedItem";
 import { DifficultyBadge } from "../components/playground/DifficultyBadge";
 import { WarriorProgressBar } from "../components/progress/WarriorProgressBar";
+import { capturePageAsPng } from "../utils/pageCapture";
 
 type HealthState =
   | { status: "loading" }
@@ -26,6 +27,8 @@ const dashboardGroupFrameClass =
   "relative overflow-hidden rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.032),rgba(255,255,255,0.018),rgba(10,32,52,0.038))] shadow-[0_10px_28px_rgba(8,35,70,0.06)] backdrop-blur-[16px]";
 const dashboardGroupInnerGlowClass =
   "pointer-events-none absolute inset-[1px] rounded-[29px] border border-white/5 bg-[radial-gradient(circle_at_top,rgba(186,236,255,0.04),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.026),rgba(255,255,255,0.010),transparent)]";
+const dashboardStatHoverClass =
+  "transition duration-200 hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.055] hover:shadow-[0_18px_38px_rgba(11,47,84,0.14)]";
 const actionSecondaryClass =
   "rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-slate-100 transition duration-200 hover:-translate-y-0.5 hover:border-white/18 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50";
 const actionPrimaryClass =
@@ -146,6 +149,44 @@ const weeklyChallengeDescriptions = [
   "Designed for longer sessions and cleaner consistency.",
   "Better approached with patience than quick retries.",
 ] as const;
+const dashboardActivityFeed = [
+  {
+    title: "New Warrior medal",
+    detail: "Spring 2025 - 03 moved from close to earned with a 0:56.973 PB.",
+    time: "2m ago",
+    status: "earned",
+  },
+  {
+    title: "PB improved",
+    detail: "Fall 2025 - 04 improved by 0.532s and entered the <=1s bucket.",
+    time: "15m ago",
+    status: "close",
+  },
+  {
+    title: "Challenge targets rerolled",
+    detail: "New daily targets generated for the next grind block.",
+    time: "32m ago",
+    status: "targets",
+  },
+  {
+    title: "Sync completed",
+    detail: "Player PB sync finished successfully.",
+    time: "1h ago",
+    status: "up_to_date",
+  },
+  {
+    title: "Weekly challenge selected",
+    detail: "Royal Valley selected as this week's longer session pick.",
+    time: "today",
+    status: "weekly",
+  },
+  {
+    title: "Sync notice",
+    detail: "Positions data is a few days old. Refresh when needed.",
+    time: "today",
+    status: "notice",
+  },
+] as const;
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
@@ -181,20 +222,10 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
     if (!pageRef.current || captureState === "running") return;
     setCaptureState("running");
     try {
-      const node = pageRef.current;
-      const dataUrl = await toPng(node, {
-        cacheBust: true,
-        pixelRatio: 2,
-        width: node.scrollWidth,
-        height: node.scrollHeight,
-        canvasWidth: node.scrollWidth * 2,
-        canvasHeight: node.scrollHeight * 2,
-      });
-
-      const link = document.createElement("a");
-      link.download = `medalforge-dashboard-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`;
-      link.href = dataUrl;
-      link.click();
+      await capturePageAsPng(
+        pageRef.current,
+        `medalforge-dashboard-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`,
+      );
       setCaptureState("done");
       window.setTimeout(() => setCaptureState("idle"), 1800);
     } catch {
@@ -380,7 +411,7 @@ function DashboardSection({
               <h3 className="mt-3 text-2xl font-black tracking-[-0.04em] text-white">No personal bests synced yet</h3>
               <p className="mt-3 text-sm leading-6 text-sky-100/68">
                 Connect your Trackmania account and run Sync My PBs from Settings. The dashboard will start
-                showing completion, close medals, and quick wins as soon as local PB data exists.
+                showing completion, close medals, and progress activity as soon as local PB data exists.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -392,10 +423,9 @@ function DashboardSection({
       ) : (
         <section className={`${dashboardGroupFrameClass} p-3.5 md:p-4`}>
           <div className={dashboardGroupInnerGlowClass} />
-          <div className="relative grid gap-4 2xl:grid-cols-3">
+          <div className="relative grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.75fr)]">
             <SummaryListBlock emptyMessage="No close missing medals right now." items={summary.closest_missing_maps} subtitle="Closest misses by current PB gap" title="Close medals" valueType="gap" />
-            <SummaryListBlock emptyMessage="No quick wins available yet." items={summary.quick_wins} subtitle="Reachable missing medals with the best payoff" title="Quick wins" valueType="gap" />
-            <SummaryListBlock emptyMessage="No earned Warrior medals yet." items={summary.best_margin_maps} subtitle="Maps where your PB is safely ahead of Warrior" title="Best margins" valueType="margin" />
+            <ActivityFeedBlock />
           </div>
         </section>
       )}
@@ -427,7 +457,7 @@ function ProgressChip({ label, value, tone }: { label: string; value: number; to
 }
 
 function SpotlightCard({ label, value, detail }: { label: string; value: string; detail: string }) {
-  return <article className="rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-5 backdrop-blur-xl"><p className="font-mono text-[11px] font-black uppercase tracking-[0.24em] text-cyan-100/72">{label}</p><p className="mt-3 text-4xl font-black tracking-[-0.07em] text-white">{value}</p><p className="mt-2 text-sm leading-6 text-sky-100/62">{detail}</p></article>;
+  return <article className={`rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))] p-5 backdrop-blur-xl ${dashboardStatHoverClass}`}><p className="font-mono text-[11px] font-black uppercase tracking-[0.24em] text-cyan-100/72">{label}</p><p className="mt-3 text-4xl font-black tracking-[-0.07em] text-white">{value}</p><p className="mt-2 text-sm leading-6 text-sky-100/62">{detail}</p></article>;
 }
 
 function MetricCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone: "emerald" | "cyan" | "slate" | "rose" }) {
@@ -443,24 +473,47 @@ function MetricCard({ label, value, detail, tone }: { label: string; value: stri
     slate: "text-slate-100",
     rose: "text-rose-100",
   } satisfies Record<string, string>;
-  return <article className={`${subduedCardClass} p-3.5`}><div className={`rounded-[18px] bg-[linear-gradient(135deg,var(--tw-gradient-stops))] px-4 py-3.5 ${toneClasses[tone]}`}><p className="font-mono text-[11px] font-black uppercase tracking-[0.24em] text-sky-50/56">{label}</p><strong className={`mt-2.5 block text-[2rem] font-black tracking-[-0.07em] ${valueTone[tone]}`}>{value}</strong><span className="mt-1.5 block text-[13px] leading-5 text-sky-100/64">{detail}</span></div></article>;
+  return <article className={`${subduedCardClass} p-3.5 ${dashboardStatHoverClass}`}><div className={`rounded-[18px] bg-[linear-gradient(135deg,var(--tw-gradient-stops))] px-4 py-3.5 ${toneClasses[tone]}`}><p className="font-mono text-[11px] font-black uppercase tracking-[0.24em] text-sky-50/56">{label}</p><strong className={`mt-2.5 block text-[2rem] font-black tracking-[-0.07em] ${valueTone[tone]}`}>{value}</strong><span className="mt-1.5 block text-[13px] leading-5 text-sky-100/64">{detail}</span></div></article>;
 }
 
 type ChallengeTargetsState =
   | { status: "loading" }
-  | { status: "ok"; daily: MapListItem[]; weekly: MapListItem | null; mode: "default" | "edge" }
+  | {
+      status: "ok";
+      daily: MapListItem[];
+      weekly: MapListItem | null;
+      mode: "default" | "edge";
+      dailyExpiresAt: number;
+      weeklyExpiresAt: number;
+    }
   | { status: "empty" }
   | { status: "error"; message: string };
 
+type ChallengeTargetsStoredEntry<TSelection> = {
+  selection: TSelection;
+  generatedAt: number;
+  expiresAt: number;
+};
+
 type ChallengeTargetsStoredSelection = {
   mode?: "default" | "edge";
-  daily: string[];
-  weekly: string | null;
-  generatedAt: number;
+  daily: ChallengeTargetsStoredEntry<string[]>;
+  weekly: ChallengeTargetsStoredEntry<string | null>;
 };
 
 function ChallengeTargetsBlock({ totalMaps }: { totalMaps: number }) {
   const [state, setState] = useState<ChallengeTargetsState>({ status: "loading" });
+  const [countdownNow, setCountdownNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCountdownNow(Date.now());
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -481,6 +534,7 @@ function ChallengeTargetsBlock({ totalMaps }: { totalMaps: number }) {
         const maps = response.items;
         const missingMaps = maps.filter((map) => !map.has_warrior);
         const standardMissingMaps = buildStandardChallengePool(missingMaps);
+        const storedSelection = readStoredChallengeTargetSelection(maps);
 
         if (standardMissingMaps.length === 0 && !options.edgeMode) {
           setState({ status: "empty" });
@@ -489,12 +543,27 @@ function ChallengeTargetsBlock({ totalMaps }: { totalMaps: number }) {
 
         const selection = options.forceReroll
           ? options.edgeMode
-            ? createEdgeChallengeTargetSelection(missingMaps)
-            : createChallengeTargetSelection(standardMissingMaps)
-          : readStoredChallengeTargetSelection(maps) ?? createChallengeTargetSelection(standardMissingMaps);
+            ? createStoredChallengeSelection(createEdgeChallengeTargetSelection(missingMaps))
+            : createStoredChallengeSelection(createChallengeTargetSelection(standardMissingMaps))
+          : resolveChallengeTargetSelection({
+              missingMaps,
+              standardMissingMaps,
+              storedSelection,
+            });
 
         if (!selection) {
-          setState(options.edgeMode ? { status: "ok", daily: [], weekly: null, mode: "edge" } : { status: "empty" });
+          setState(
+            options.edgeMode
+              ? {
+                  status: "ok",
+                  daily: [],
+                  weekly: null,
+                  mode: "edge",
+                  dailyExpiresAt: getNextDailyReset(),
+                  weeklyExpiresAt: getNextWeeklyReset(),
+                }
+              : { status: "empty" },
+          );
           return;
         }
 
@@ -504,6 +573,8 @@ function ChallengeTargetsBlock({ totalMaps }: { totalMaps: number }) {
           daily: selection.daily,
           weekly: selection.weekly,
           mode: selection.mode,
+          dailyExpiresAt: selection.dailyExpiresAt,
+          weeklyExpiresAt: selection.weeklyExpiresAt,
         });
       } catch (error: unknown) {
         if (!cancelled) {
@@ -538,12 +609,20 @@ function ChallengeTargetsBlock({ totalMaps }: { totalMaps: number }) {
       <div className="playground-telemetry-grid pointer-events-none absolute inset-0 opacity-[0.04]" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-[36%] bg-[radial-gradient(circle_at_center,rgba(122,92,255,0.10),transparent_62%)]" />
       <div className="relative">
-        <div className="mb-4">
-          <p className="font-mono text-[11px] font-black uppercase tracking-[0.28em] text-cyan-100/76">CHALLENGE YOURSELF</p>
-          <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-white">Challenge targets</h3>
-          <p className="mt-2 max-w-[68rem] text-sm leading-6 text-sky-100/68">
-            Randomly selected missing Warrior medals for daily targets or a weekly challenge when you do not know what to grind next.
-          </p>
+        <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div>
+            <p className="font-mono text-[11px] font-black uppercase tracking-[0.28em] text-cyan-100/76">CHALLENGE YOURSELF</p>
+            <h3 className="mt-2 text-2xl font-black tracking-[-0.04em] text-white">Challenge targets</h3>
+            <p className="mt-2 max-w-[68rem] text-sm leading-6 text-sky-100/68">
+              Randomly selected missing Warrior medals for daily targets or a weekly challenge when you do not know what to grind next.
+            </p>
+          </div>
+          {state.status === "ok" ? (
+            <div className="flex flex-wrap gap-2 xl:max-w-[24rem] xl:justify-end">
+              <ChallengeResetPill label="DAILY RESET" value={formatResetCountdown(state.dailyExpiresAt, countdownNow, "daily")} />
+              <ChallengeResetPill label="WEEKLY RESET" value={formatResetCountdown(state.weeklyExpiresAt, countdownNow, "weekly")} />
+            </div>
+          ) : null}
         </div>
 
         {state.status === "loading" ? <ChallengeTargetsLoadingState /> : null}
@@ -580,6 +659,15 @@ function ChallengeTargetsErrorState({ message }: { message: string }) {
   return (
     <div className="rounded-[22px] border border-rose-300/16 bg-rose-500/[0.08] p-5 text-sm leading-6 text-rose-100/84">
       {message}
+    </div>
+  );
+}
+
+function ChallengeResetPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[18px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(255,255,255,0.02))] px-3.5 py-2.5 backdrop-blur-md">
+      <p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-sky-50/48">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-sky-50/86">{value}</p>
     </div>
   );
 }
@@ -705,7 +793,6 @@ function DashboardChallengeWeeklyCard({ map }: { map: MapListItem }) {
         <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap">
           <ChallengeChip label={map.category ?? "Unknown"} tone="neutral" />
           {map.difficulty_tier ? <DifficultyBadge tier={map.difficulty_tier} /> : null}
-          <ChallengeChip label="IN PROGRESS" tone="elite" />
           <ChallengeChip label={accent.stageLabel} tone={accent.chipTone} />
         </div>
 
@@ -888,6 +975,23 @@ function SummaryListBlock({ title, subtitle, items, emptyMessage, valueType }: {
   );
 }
 
+function ActivityFeedBlock() {
+  return (
+    <section className={`${glassCardClass} p-5`}>
+      <div className="mb-5">
+        <p className="font-mono text-[11px] font-black uppercase tracking-[0.24em] text-sky-50/56">ACTIVITY</p>
+        <h3 className="mt-3 text-xl font-black tracking-[-0.04em] text-white">Activity Feed</h3>
+        <p className="mt-2 text-sm leading-6 text-sky-100/64">Recent progress, sync events, and challenge updates.</p>
+      </div>
+      <div className="grid gap-2.5">
+        {dashboardActivityFeed.map((item) => (
+          <ActivityFeedItem detail={item.detail} key={`${item.title}-${item.time}`} status={item.status} time={item.time} title={item.title} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SmallChip({ label, tone }: { label: string; tone: "success" | "warning" | "danger" | "muted" | "cyan" | "purple" }) {
   const toneClass = {
     success: "border-emerald-300/18 bg-emerald-400/12 text-emerald-100",
@@ -1036,21 +1140,77 @@ function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
+function getNextDailyReset(from = new Date()) {
+  const reset = new Date(from);
+  reset.setHours(5, 0, 0, 0);
+
+  if (from.getTime() >= reset.getTime()) {
+    reset.setDate(reset.getDate() + 1);
+  }
+
+  return reset.getTime();
+}
+
+function getNextWeeklyReset(from = new Date()) {
+  const reset = new Date(from);
+  const day = reset.getDay();
+  const daysUntilMonday = (8 - day) % 7;
+
+  reset.setDate(reset.getDate() + daysUntilMonday);
+  reset.setHours(5, 0, 0, 0);
+
+  if (daysUntilMonday === 0 && from.getTime() >= reset.getTime()) {
+    reset.setDate(reset.getDate() + 7);
+  }
+
+  return reset.getTime();
+}
+
+function formatResetCountdown(expiresAt: number, now: number, mode: "daily" | "weekly") {
+  const remainingMs = Math.max(0, expiresAt - now);
+  const totalSeconds = Math.floor(remainingMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (mode === "daily") {
+    const totalHours = days * 24 + hours;
+    return `${String(totalHours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  if (days > 0) {
+    return `${days}D ${String(hours).padStart(2, "0")}H`;
+  }
+
+  return `${String(hours).padStart(2, "0")}H ${String(minutes).padStart(2, "0")}M`;
+}
+
 function readStoredChallengeTargetSelection(maps: MapListItem[]) {
   try {
     const raw = window.localStorage.getItem(challengeTargetsStorageKey);
     if (!raw) return null;
 
     const parsed = JSON.parse(raw) as Partial<ChallengeTargetsStoredSelection>;
-    if (!parsed || !Array.isArray(parsed.daily) || (parsed.weekly !== null && typeof parsed.weekly !== "string")) {
+    if (
+      !parsed
+      || !parsed.daily
+      || !Array.isArray(parsed.daily.selection)
+      || typeof parsed.daily.generatedAt !== "number"
+      || typeof parsed.daily.expiresAt !== "number"
+      || !parsed.weekly
+      || (parsed.weekly.selection !== null && typeof parsed.weekly.selection !== "string")
+      || typeof parsed.weekly.generatedAt !== "number"
+      || typeof parsed.weekly.expiresAt !== "number"
+    ) {
       return null;
     }
 
     const byUid = new Map(maps.map((map) => [map.map_uid, map] as const));
-    const daily = parsed.daily
+    const daily = parsed.daily.selection
       .map((uid) => byUid.get(uid))
       .filter((map): map is MapListItem => map !== undefined && !map.has_warrior);
-    const weekly = parsed.weekly ? byUid.get(parsed.weekly) ?? null : null;
+    const weekly = parsed.weekly.selection ? byUid.get(parsed.weekly.selection) ?? null : null;
     const mode: "default" | "edge" = parsed.mode === "edge" ? "edge" : "default";
 
     if (mode === "default") {
@@ -1058,7 +1218,15 @@ function readStoredChallengeTargetSelection(maps: MapListItem[]) {
       if (!daily.every(isStandardChallengeCandidate) || !isStandardChallengeCandidate(weekly)) return null;
       const unique = new Set([...daily.map((map) => map.map_uid), weekly.map_uid]);
       if (unique.size !== 4) return null;
-      return { daily, weekly, mode };
+      return {
+        daily,
+        weekly,
+        mode,
+        dailyGeneratedAt: parsed.daily.generatedAt,
+        dailyExpiresAt: parsed.daily.expiresAt,
+        weeklyGeneratedAt: parsed.weekly.generatedAt,
+        weeklyExpiresAt: parsed.weekly.expiresAt,
+      };
     }
 
     if (daily.length > 3) return null;
@@ -1066,24 +1234,133 @@ function readStoredChallengeTargetSelection(maps: MapListItem[]) {
     const unique = new Set([...daily.map((map) => map.map_uid), ...(weekly ? [weekly.map_uid] : [])]);
     if (unique.size !== daily.length + (weekly ? 1 : 0)) return null;
 
-    return { daily, weekly, mode };
+    return {
+      daily,
+      weekly,
+      mode,
+      dailyGeneratedAt: parsed.daily.generatedAt,
+      dailyExpiresAt: parsed.daily.expiresAt,
+      weeklyGeneratedAt: parsed.weekly.generatedAt,
+      weeklyExpiresAt: parsed.weekly.expiresAt,
+    };
   } catch {
     return null;
   }
 }
 
-function writeStoredChallengeTargetSelection(selection: { daily: MapListItem[]; weekly: MapListItem | null; mode: "default" | "edge" }) {
+function writeStoredChallengeTargetSelection(selection: {
+  daily: MapListItem[];
+  weekly: MapListItem | null;
+  mode: "default" | "edge";
+  dailyGeneratedAt: number;
+  dailyExpiresAt: number;
+  weeklyGeneratedAt: number;
+  weeklyExpiresAt: number;
+}) {
   try {
     const payload: ChallengeTargetsStoredSelection = {
       mode: selection.mode,
-      daily: selection.daily.map((map) => map.map_uid),
-      weekly: selection.weekly?.map_uid ?? null,
-      generatedAt: Date.now(),
+      daily: {
+        selection: selection.daily.map((map) => map.map_uid),
+        generatedAt: selection.dailyGeneratedAt,
+        expiresAt: selection.dailyExpiresAt,
+      },
+      weekly: {
+        selection: selection.weekly?.map_uid ?? null,
+        generatedAt: selection.weeklyGeneratedAt,
+        expiresAt: selection.weeklyExpiresAt,
+      },
     };
     window.localStorage.setItem(challengeTargetsStorageKey, JSON.stringify(payload));
   } catch {
     // Ignore localStorage failures and keep the in-memory selection.
   }
+}
+
+function createStoredChallengeSelection(selection: { daily: MapListItem[]; weekly: MapListItem | null; mode: "default" | "edge" } | null) {
+  if (!selection) return null;
+
+  const now = Date.now();
+  return {
+    ...selection,
+    dailyGeneratedAt: now,
+    dailyExpiresAt: getNextDailyReset(new Date(now)),
+    weeklyGeneratedAt: now,
+    weeklyExpiresAt: getNextWeeklyReset(new Date(now)),
+  };
+}
+
+function resolveChallengeTargetSelection({
+  missingMaps,
+  standardMissingMaps,
+  storedSelection,
+}: {
+  missingMaps: MapListItem[];
+  standardMissingMaps: MapListItem[];
+  storedSelection: ReturnType<typeof readStoredChallengeTargetSelection>;
+}) {
+  if (!storedSelection) {
+    return createStoredChallengeSelection(createChallengeTargetSelection(standardMissingMaps));
+  }
+
+  const now = Date.now();
+  const dailyExpired = storedSelection.dailyExpiresAt <= now;
+  const weeklyExpired = storedSelection.weeklyExpiresAt <= now;
+
+  if (!dailyExpired && !weeklyExpired) {
+    return storedSelection;
+  }
+
+  if (dailyExpired && weeklyExpired) {
+    return storedSelection.mode === "edge"
+      ? createStoredChallengeSelection(createEdgeChallengeTargetSelection(missingMaps))
+      : createStoredChallengeSelection(createChallengeTargetSelection(standardMissingMaps));
+  }
+
+  if (storedSelection.mode === "edge") {
+    const nextDaily = dailyExpired
+      ? rerollEdgeDailyTargets(missingMaps, storedSelection.weekly)
+      : storedSelection.daily;
+    const nextWeekly = weeklyExpired
+      ? rerollEdgeWeeklyChallenge(missingMaps, storedSelection.daily)
+      : storedSelection.weekly;
+
+    return {
+      daily: nextDaily,
+      weekly: nextWeekly,
+      mode: "edge" as const,
+      dailyGeneratedAt: dailyExpired ? now : storedSelection.dailyGeneratedAt,
+      dailyExpiresAt: dailyExpired ? getNextDailyReset(new Date(now)) : storedSelection.dailyExpiresAt,
+      weeklyGeneratedAt: weeklyExpired ? now : storedSelection.weeklyGeneratedAt,
+      weeklyExpiresAt: weeklyExpired ? getNextWeeklyReset(new Date(now)) : storedSelection.weeklyExpiresAt,
+    };
+  }
+
+  const nextDaily = dailyExpired
+    ? rerollDailyTargets(standardMissingMaps, storedSelection.weekly) ?? storedSelection.daily
+    : storedSelection.daily;
+  const nextWeekly = weeklyExpired
+    ? rerollWeeklyChallenge(standardMissingMaps, storedSelection.daily) ?? storedSelection.weekly
+    : storedSelection.weekly;
+
+  const unique = new Set([
+    ...nextDaily.map((map) => map.map_uid),
+    ...(nextWeekly ? [nextWeekly.map_uid] : []),
+  ]);
+
+  if (unique.size !== nextDaily.length + (nextWeekly ? 1 : 0)) {
+    return createStoredChallengeSelection(createChallengeTargetSelection(standardMissingMaps));
+  }
+
+  return {
+    daily: nextDaily,
+    weekly: nextWeekly,
+    mode: "default" as const,
+    dailyGeneratedAt: dailyExpired ? now : storedSelection.dailyGeneratedAt,
+    dailyExpiresAt: dailyExpired ? getNextDailyReset(new Date(now)) : storedSelection.dailyExpiresAt,
+    weeklyGeneratedAt: weeklyExpired ? now : storedSelection.weeklyGeneratedAt,
+    weeklyExpiresAt: weeklyExpired ? getNextWeeklyReset(new Date(now)) : storedSelection.weeklyExpiresAt,
+  };
 }
 
 function createChallengeTargetSelection(missingMaps: MapListItem[]) {
@@ -1148,6 +1425,58 @@ function createEdgeChallengeTargetSelection(missingMaps: MapListItem[]) {
   const daily = ranked.slice(1, 4);
 
   return { daily, weekly, mode: "edge" as const };
+}
+
+function rerollDailyTargets(maps: MapListItem[], currentWeekly: MapListItem | null) {
+  const available = maps.filter((map) => map.map_uid !== currentWeekly?.map_uid);
+  if (available.length < 3) return null;
+
+  const selected: MapListItem[] = [];
+  const nextAvailable = [...available];
+  const requirePb = Math.random() < 0.5;
+
+  if (requirePb) {
+    const pbAnchor = pickRandom(nextAvailable.filter((map) => map.pb_time_ms !== null));
+    if (pbAnchor) {
+      selected.push(pbAnchor);
+      removeMapByUid(nextAvailable, pbAnchor.map_uid);
+    }
+  }
+
+  while (selected.length < 3 && nextAvailable.length > 0) {
+    const dailyPool = prioritizeDailyCandidates(nextAvailable);
+    const picked = pickRandom(dailyPool) ?? pickRandom(nextAvailable);
+    if (!picked) break;
+    selected.push(picked);
+    removeMapByUid(nextAvailable, picked.map_uid);
+  }
+
+  return selected.length === 3 ? selected : null;
+}
+
+function rerollWeeklyChallenge(maps: MapListItem[], currentDaily: MapListItem[]) {
+  const excluded = new Set(currentDaily.map((map) => map.map_uid));
+  const available = maps.filter((map) => !excluded.has(map.map_uid));
+  if (available.length === 0) return null;
+
+  const weeklyPool = prioritizeWeeklyCandidates(available);
+  return pickRandom(weeklyPool) ?? pickRandom(available) ?? null;
+}
+
+function rerollEdgeDailyTargets(maps: MapListItem[], currentWeekly: MapListItem | null) {
+  const available = maps.filter((map) => map.map_uid !== currentWeekly?.map_uid);
+  const totalRealTargets = Math.min(available.length, Math.floor(Math.random() * 4));
+  return shuffleMaps(available).slice(0, totalRealTargets);
+}
+
+function rerollEdgeWeeklyChallenge(maps: MapListItem[], currentDaily: MapListItem[]) {
+  const excluded = new Set(currentDaily.map((map) => map.map_uid));
+  const available = maps.filter((map) => !excluded.has(map.map_uid));
+  if (available.length === 0) return null;
+
+  const sampleSize = Math.min(available.length, Math.max(1, Math.floor(Math.random() * 4)));
+  const ranked = shuffleMaps(available).slice(0, sampleSize).sort(compareChallengeDifficulty);
+  return ranked[0] ?? null;
 }
 
 function prioritizeDailyCandidates(maps: MapListItem[]) {
