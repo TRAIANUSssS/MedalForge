@@ -845,8 +845,9 @@ function SummaryListBlock({ title, subtitle, items, emptyMessage, valueType }: {
         <div className="rounded-[20px] border border-dashed border-white/14 bg-white/[0.025] p-5 text-sm leading-6 text-sky-100/60">{emptyMessage}</div>
       ) : (
         <div className="grid gap-3">
-          {items.map((item) => (
-            <article className={`rounded-[22px] border p-4 ${interactiveCardClass} ${getSummaryRowClass(title, item)}`} key={`${title}-${item.map_uid}`}>
+          {items.map((item) => {
+            const externalUrl = item.tmx_url ?? null;
+            const content = (
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <strong className="block truncate text-base font-bold text-white">{cleanTrackmaniaText(item.name) ?? "Unnamed map"}</strong>
@@ -860,10 +861,27 @@ function SummaryListBlock({ title, subtitle, items, emptyMessage, valueType }: {
                     {valueType === "gap" ? formatGap(item.diff_to_warrior_ms) : formatGap(item.margin_vs_warrior_ms)}
                   </strong>
                   <span className="mt-2 block text-xs leading-5 text-sky-100/54">{formatPositionSummary(item)}</span>
+                  {externalUrl ? <span className="mt-2 block text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/58">Open on TMX</span> : null}
                 </div>
               </div>
-            </article>
-          ))}
+            );
+
+            if (externalUrl) {
+              return (
+                <a
+                  className={`block cursor-pointer rounded-[22px] border p-4 ${interactiveCardClass} ${getSummaryRowClass()}`}
+                  href={externalUrl}
+                  key={`${title}-${item.map_uid}`}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {content}
+                </a>
+              );
+            }
+
+            return <article className={`rounded-[22px] border p-4 ${getSummaryRowClass()}`} key={`${title}-${item.map_uid}`}>{content}</article>;
+          })}
         </div>
       )}
     </section>
@@ -1003,9 +1021,7 @@ function getSummaryValueClass(title: string, valueType: "gap" | "margin", item: 
   if ((item.diff_to_warrior_ms ?? 999999) <= 500) return "text-amber-100";
   return "text-orange-100";
 }
-function getSummaryRowClass(title: string, item: SummaryMapItem) {
-  if (title === "Best margins") return "border-violet-300/12 bg-[linear-gradient(180deg,rgba(167,139,250,0.08),rgba(255,255,255,0.025))]";
-  if ((item.diff_to_warrior_ms ?? 999999) <= 500) return "border-amber-300/12 bg-[linear-gradient(180deg,rgba(245,158,11,0.08),rgba(255,255,255,0.025))]";
+function getSummaryRowClass() {
   return "border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))]";
 }
 function cleanTrackmaniaText(value: string | null) {

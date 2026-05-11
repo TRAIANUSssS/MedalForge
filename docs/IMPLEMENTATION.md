@@ -443,6 +443,9 @@ Implemented:
   - fallback to `trackmania_io_url`;
   - fallback to Trackmania.io leaderboard URL built from `map_id` + `map_uid`.
 - Weekly Challenge now prefers backend-synced `tmx_thumbnail_url`, with fallback to the stored map thumbnail and then the existing glass placeholder.
+- Recommendation cards in `Close medals`, `Quick wins`, and `Best margins` now open TMX directly when `tmx_url` exists.
+- Recommendation cards currently use a neutral glass row style without the earlier local color highlight tint.
+- Clickable recommendation cards expose a small `Open on TMX` affordance instead of adding a larger CTA.
 - Daily and weekly challenge descriptions are now drawn from stable frontend description pools keyed by card semantic state and `map_uid`, so text does not jump on rerender.
 - Dashboard layering was lightly refined with subtle grouped wrappers for:
   - summary stats;

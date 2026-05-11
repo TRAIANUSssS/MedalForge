@@ -66,6 +66,9 @@ Current characteristics:
 - daily and weekly `BEAT NOW` CTA links open external map pages in a new tab;
 - external link priority is `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
 - Weekly Challenge now prefers `tmx_thumbnail_url`, falls back to the stored map thumbnail, and then to the existing glass placeholder;
+- recommendation rows in `Close medals`, `Quick wins`, and `Best margins` now open TMX directly when `tmx_url` is available;
+- those recommendation rows currently use a neutral glass treatment without per-card amber/violet tint accents;
+- clickable recommendation rows expose a small `Open on TMX` affordance instead of adding heavier visual chrome;
 - daily and weekly challenge descriptions now come from stable description pools instead of a single hardcoded sentence.
 - links users into `Maps` for the full database table and into `Settings` for sync/account actions.
 
