@@ -149,6 +149,13 @@ Current dashboard target-card flow:
 - external challenge links are resolved from backend-returned metadata with priority `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
 - Weekly Challenge thumbnail priority is `tmx_thumbnail_url -> thumbnail_url -> local glass placeholder`.
 
+Current dashboard recommendation-card flow:
+
+- `Close medals`, `Quick wins`, and `Best margins` use the backend summary payload from `GET /api/stats/summary`;
+- when a summary row has `tmx_url`, the entire row becomes an external TMX link;
+- recommendation rows currently use one neutral glass style instead of per-section accent tinting;
+- linked rows expose a small `Open on TMX` affordance rather than a larger CTA block.
+
 ## MVP Boundaries
 
 Do not implement in MVP:

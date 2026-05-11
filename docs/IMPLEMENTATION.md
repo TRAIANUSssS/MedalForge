@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.4: TMX enrichment, challenge-card external links, and Settings TMX sync controls.
+- Sprint 6.4: TMX enrichment, dashboard external-link polish, and Settings TMX sync controls.
 
 ## Stage Checklist
 
@@ -33,7 +33,7 @@ Current focus:
 | Sprint 6.1: Frontend visual foundation | Done | Design playground, manual frontend routing, progress entry page, reusable hero Warrior progress bar | Frontend opens on `/`, dashboard remains on `/dashboard`, `npm run build` |
 | Sprint 6.2: Workspace split and dashboard polish | Done | Separate `Maps` and `Settings` workspaces, fixed shared sidebar, compact sticky progress, dashboard visual polish | `/dashboard`, `/maps`, `/settings` open correctly and `npm run build` passes |
 | Sprint 6.3: Challenge target cards | Done | Dashboard `CHALLENGE YOURSELF` block, sidebar reroll actions, localStorage persistence, completion placeholders/celebration state | `/dashboard` shows 3 daily rows + 1 weekly card, reroll works, build passes |
-| Sprint 6.4: TMX map enrichment | Done | Backend TMX sync, stored TMX metadata, dashboard TMX links/thumbs, Settings TMX sync action | `POST /api/sync/tmx-map-info`, `/dashboard`, and `npm run build` all pass |
+| Sprint 6.4: TMX map enrichment | Done | Backend TMX sync, stored TMX metadata, dashboard TMX links/thumbs for challenge and recommendation cards, Settings TMX sync action | `POST /api/sync/tmx-map-info`, `/dashboard`, and `npm run build` all pass |
 
 ## Completed Notes
 
