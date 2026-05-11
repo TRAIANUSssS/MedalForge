@@ -135,6 +135,7 @@ Current frontend UI split:
 Current production workspace layout:
 
 - desktop uses a fixed left sidebar shell with shared navigation and sticky-progress visibility;
+- the sidebar now also owns a compact shared `DEBUG` block for page capture and dashboard-only debug actions;
 - main workspace content is offset from the fixed sidebar instead of using a sticky split grid;
 - mobile/tablet keeps the sidebar as a normal top block.
 
@@ -145,9 +146,15 @@ Current dashboard target-card flow:
 - standard reroll selects normal missing/not-earned targets;
 - edge-case reroll can intentionally generate `0-3` real targets to test late-progress states;
 - selection is persisted in browser `localStorage`;
-- sidebar actions communicate with the dashboard through browser `CustomEvent`s instead of a global state library;
+- dashboard-only sidebar debug actions communicate with the dashboard through browser `CustomEvent`s instead of a global state library;
 - external challenge links are resolved from backend-returned metadata with priority `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
 - Weekly Challenge thumbnail priority is `tmx_thumbnail_url -> thumbnail_url -> local glass placeholder`.
+
+Current page-capture flow:
+
+- production full-page PNG capture is triggered from the shared sidebar `DEBUG` block rather than per-page hero controls;
+- each production page still captures its own page root (`DashboardPage`, `MapsPage`, `SettingsPage`);
+- the backend version badge remains visible in the hero area only on `SettingsPage`.
 
 Current dashboard recommendation-card flow:
 

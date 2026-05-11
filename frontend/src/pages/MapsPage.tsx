@@ -1,14 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
-import { getHealth, getMaps, getMapsMeta, getStatsSummary, type HealthResponse, type MapListItem, type MapsMetaResponse, type StatsSummaryResponse } from "../api/client";
+import { getMaps, getMapsMeta, getStatsSummary, type MapListItem, type MapsMetaResponse, type StatsSummaryResponse } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
 import { DifficultyBadge } from "../components/playground/DifficultyBadge";
 import { capturePageAsPng } from "../utils/pageCapture";
-
-type HealthState =
-  | { status: "loading" }
-  | { status: "ok"; data: HealthResponse }
-  | { status: "error"; message: string };
 
 type MapsState =
   | { status: "loading" }
@@ -37,7 +32,6 @@ const interactiveCardClass =
 
 export function MapsPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
-  const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [maps, setMaps] = useState<MapsState>({ status: "loading" });
   const [mapsMeta, setMapsMeta] = useState<MapsMetaState>({ status: "loading" });
   const [stats, setStats] = useState<StatsState>({ status: "loading" });
@@ -53,18 +47,6 @@ export function MapsPage({ onNavigate }: { onNavigate: (path: string) => void })
 
   useEffect(() => {
     let cancelled = false;
-    getHealth()
-      .then((data) => {
-        if (!cancelled) {
-          setHealth({ status: "ok", data });
-        }
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) {
-          setHealth({ status: "error", message: getErrorMessage(error, "Unknown backend error") });
-        }
-      });
-
     getMapsMeta()
       .then((data) => {
         if (!cancelled) {
@@ -149,7 +131,9 @@ export function MapsPage({ onNavigate }: { onNavigate: (path: string) => void })
         <aside className="relative mb-6 xl:fixed xl:left-[max(2rem,calc((100vw-1700px)/2+2rem))] xl:top-6 xl:z-30 xl:mb-0 xl:h-[calc(100vh-3rem)] xl:w-[292px]">
           <AppSidebar
             activePath="/maps"
+            captureState={captureState}
             onNavigate={onNavigate}
+            onCapturePage={() => void handleCapturePage()}
             progress={stats.status === "ok" ? { earned: stats.data.earned_count, total: stats.data.total_maps } : null}
           />
         </aside>
@@ -173,24 +157,6 @@ export function MapsPage({ onNavigate }: { onNavigate: (path: string) => void })
                     Dedicated browsing space for filters, sorting, PB state, difficulty and required
                     position, without competing with dashboard overview blocks.
                   </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
-                  <button
-                    className={`${actionSecondaryClass} sm:col-span-2`}
-                    disabled={captureState === "running"}
-                    type="button"
-                    onClick={() => void handleCapturePage()}
-                  >
-                    {captureState === "running" ? "Capturing full page..." : "Save full-page PNG"}
-                  </button>
-                  <div className="rounded-[20px] border border-white/12 bg-white/[0.04] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-50/58">
-                    {captureState === "done"
-                      ? "PNG saved"
-                      : captureState === "error"
-                        ? "Capture failed"
-                        : "Full maps screenshot"}
-                  </div>
-                  <HealthBadge health={health} />
                 </div>
               </div>
             </section>
@@ -319,16 +285,6 @@ export function MapsPage({ onNavigate }: { onNavigate: (path: string) => void })
       </div>
     </div>
   );
-}
-
-function HealthBadge({ health }: { health: HealthState }) {
-  if (health.status === "loading") {
-    return <div className="rounded-full border border-amber-200/20 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100">Checking backend</div>;
-  }
-  if (health.status === "error") {
-    return <div className="rounded-full border border-rose-300/20 bg-rose-500/14 px-4 py-3 text-sm font-semibold text-rose-100">Backend offline</div>;
-  }
-  return <div className="rounded-full border border-emerald-300/22 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100">Backend {health.data.version}</div>;
 }
 
 function MapsTable({ maps }: { maps: MapsState }) {

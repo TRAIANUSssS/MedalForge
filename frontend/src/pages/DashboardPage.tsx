@@ -1,16 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-import { getHealth, getMaps, getStatsSummary, type HealthResponse, type LatestSyncJobSummary, type MapListItem, type StatsSummaryResponse, type SummaryMapItem } from "../api/client";
+import { getMaps, getStatsSummary, type LatestSyncJobSummary, type MapListItem, type StatsSummaryResponse, type SummaryMapItem } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
 import { ActivityFeedItem } from "../components/playground/ActivityFeedItem";
 import { DifficultyBadge } from "../components/playground/DifficultyBadge";
 import { WarriorProgressBar } from "../components/progress/WarriorProgressBar";
 import { capturePageAsPng } from "../utils/pageCapture";
-
-type HealthState =
-  | { status: "loading" }
-  | { status: "ok"; data: HealthResponse }
-  | { status: "error"; message: string };
 
 type StatsState =
   | { status: "loading" }
@@ -190,20 +185,11 @@ const dashboardActivityFeed = [
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
-  const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [stats, setStats] = useState<StatsState>({ status: "loading" });
   const [captureState, setCaptureState] = useState<"idle" | "running" | "done" | "error">("idle");
 
   useEffect(() => {
     let cancelled = false;
-
-    getHealth()
-      .then((data) => {
-        if (!cancelled) setHealth({ status: "ok", data });
-      })
-      .catch((error: unknown) => {
-        if (!cancelled) setHealth({ status: "error", message: getErrorMessage(error, "Unknown backend error") });
-      });
 
     getStatsSummary()
       .then((data) => {
@@ -248,8 +234,11 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
         <aside className="relative mb-6 xl:fixed xl:left-[max(2rem,calc((100vw-1700px)/2+2rem))] xl:top-6 xl:z-30 xl:mb-0 xl:h-[calc(100vh-3rem)] xl:w-[292px]">
           <AppSidebar
             activePath="/dashboard"
+            captureState={captureState}
             onNavigate={onNavigate}
+            onCapturePage={() => void handleCapturePage()}
             progress={stats.status === "ok" ? { earned: stats.data.earned_count, total: stats.data.total_maps } : null}
+            showChallengeDebug
           />
         </aside>
 
@@ -272,20 +261,6 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
                     Overview-first cockpit for progress, near-misses, and what to grind next. Detailed
                     sync actions now live in Settings and the full table lives in Maps.
                   </p>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
-                  <button
-                    className={`${actionSecondaryClass} sm:col-span-2`}
-                    disabled={captureState === "running"}
-                    type="button"
-                    onClick={() => void handleCapturePage()}
-                  >
-                    {captureState === "running" ? "Capturing full page..." : "Save full-page PNG"}
-                  </button>
-                  <div className="rounded-[20px] border border-white/12 bg-white/[0.04] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-50/58">
-                    {captureState === "done" ? "PNG saved" : captureState === "error" ? "Capture failed" : "Full dashboard screenshot"}
-                  </div>
-                  <HealthBadge health={health} />
                 </div>
               </div>
           </section>
@@ -438,12 +413,6 @@ function DashboardSection({
       </section>
     </section>
   );
-}
-
-function HealthBadge({ health }: { health: HealthState }) {
-  if (health.status === "loading") return <div className="rounded-full border border-amber-200/20 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100">Checking backend</div>;
-  if (health.status === "error") return <div className="rounded-full border border-rose-300/20 bg-rose-500/14 px-4 py-3 text-sm font-semibold text-rose-100">Backend offline</div>;
-  return <div className="rounded-full border border-emerald-300/22 bg-emerald-400/10 px-4 py-3 text-sm font-semibold text-emerald-100">Backend {health.data.version}</div>;
 }
 
 function ProgressChip({ label, value, tone }: { label: string; value: number; tone: "warning-strong" | "warning" | "cyan" | "muted" }) {

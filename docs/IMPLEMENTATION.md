@@ -395,6 +395,7 @@ Implemented:
 - `AppSidebar` is now shared across production workspaces with:
   - fixed desktop sidebar layout;
   - compact sticky-progress card;
+  - shared sidebar `DEBUG` block for screenshot/debug actions;
   - navigation to Dashboard, Maps, Settings, and Design Playground.
 
 Verification:
@@ -429,6 +430,11 @@ Implemented:
 - Sidebar actions:
   - `Reroll targets` for the normal next-day / next-week scenario;
   - `Reroll 0-3 targets` for late-progress edge-case testing.
+- Production screenshot capture moved out of page hero controls and into the shared sidebar `DEBUG` block.
+- The sidebar capture button remains page-aware and captures the current production workspace root.
+- The old top-right screenshot button/label pair was removed from dashboard, maps, and settings hero areas.
+- `Backend {version}` hero badge is now shown only on `SettingsPage`.
+- Global frontend styling now includes a subtle thin glass scrollbar treatment instead of the browser-default scrollbar.
 - Browser-event wiring instead of global state:
   - `medalforge:reroll-challenge-targets`;
   - `medalforge:reroll-edge-challenge-targets`.

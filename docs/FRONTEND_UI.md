@@ -56,13 +56,15 @@ Current characteristics:
 
 - fixed desktop sidebar layout shared with the other production workspaces;
 - hero overall progress bar plus compact sticky progress inside the sidebar;
+- sidebar now includes a compact `DEBUG` block instead of the older `TARGETS` explainer card;
+- the shared debug block owns page-aware `Save full-page PNG` capture actions for production pages;
 - compact map recommendation cards without campaign/company chips;
 - `CHALLENGE YOURSELF` target block directly under the summary stats grid;
 - three compact daily target rows plus one weekly challenge card;
 - subtle grouped wrappers for summary stats, recommendation columns, and bottom sync telemetry;
 - sync telemetry row moved below recommendations and uses compact `sync ... ago` wording;
 - dashboard-local target persistence through `localStorage`;
-- sidebar actions for normal reroll and edge-case `0-3 targets` reroll;
+- sidebar debug actions still expose normal reroll and edge-case `0-3 targets` reroll only on the dashboard;
 - daily and weekly `BEAT NOW` CTA links open external map pages in a new tab;
 - external link priority is `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
 - Weekly Challenge now prefers `tmx_thumbnail_url`, falls back to the stored map thumbnail, and then to the existing glass placeholder;
@@ -70,6 +72,7 @@ Current characteristics:
 - those recommendation rows currently use a neutral glass treatment without per-card amber/violet tint accents;
 - clickable recommendation rows expose a small `Open on TMX` affordance instead of adding heavier visual chrome;
 - daily and weekly challenge descriptions now come from stable description pools instead of a single hardcoded sentence.
+- the old top-right screenshot controls were removed from the page hero area.
 - links users into `Maps` for the full database table and into `Settings` for sync/account actions.
 
 ### Maps Page
@@ -87,6 +90,7 @@ Purpose:
 Current characteristics:
 
 - fixed desktop sidebar layout consistent with dashboard/settings;
+- page capture now runs from the shared sidebar `DEBUG` block instead of the page header;
 - filters for category, status, search, sorting, and pagination;
 - semantic row highlighting for earned, close, and not-played states;
 - campaign metadata stays visible here, unlike compact dashboard cards.
@@ -105,6 +109,8 @@ Purpose:
 Current characteristics:
 
 - fixed desktop sidebar layout consistent with dashboard/maps;
+- `Backend {version}` badge is intentionally shown in the hero area only on Settings;
+- page capture now runs from the shared sidebar `DEBUG` block instead of the page header;
 - sync control cards for Warrior data, positions, PB sync, and TMX metadata sync;
 - Trackmania OAuth connect/disconnect/check actions;
 - latest sync status block lives here instead of on the main dashboard;
@@ -180,6 +186,7 @@ Main global style file:
 It currently contains:
 
 - application shell styles for the existing dashboard layout;
+- a subtle thin glass scrollbar treatment shared across production surfaces;
 - playground-specific utility classes such as telemetry grid and atmospheric bloom;
 - `warrior-progress-*` classes for the entry-page hero progress artifact;
 - shared `playground-cta-shimmer` helper used by `BEAT NOW` buttons in playground and dashboard target cards;

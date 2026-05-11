@@ -260,7 +260,9 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
         <aside className="relative mb-6 xl:fixed xl:left-[max(2rem,calc((100vw-1700px)/2+2rem))] xl:top-6 xl:z-30 xl:mb-0 xl:h-[calc(100vh-3rem)] xl:w-[292px]">
           <AppSidebar
             activePath="/settings"
+            captureState={captureState}
             onNavigate={onNavigate}
+            onCapturePage={() => void handleCapturePage()}
             progress={stats.status === "ok" ? { earned: stats.data.earned_count, total: stats.data.total_maps } : null}
           />
         </aside>
@@ -285,20 +287,7 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
                     OAuth controls, separated from the overview dashboard.
                   </p>
                 </div>
-                <div className="grid gap-3 sm:grid-cols-2 lg:w-[360px]">
-                  <button
-                    className={`${actionSecondaryClass} sm:col-span-2`}
-                    disabled={captureState === "running"}
-                    type="button"
-                    onClick={() => void handleCapturePage()}
-                  >
-                    {captureState === "running" ? "Capturing full page..." : "Save full-page PNG"}
-                  </button>
-                  <div className="rounded-[20px] border border-white/12 bg-white/[0.04] px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-sky-50/58">
-                    {captureState === "done" ? "PNG saved" : captureState === "error" ? "Capture failed" : "Full settings screenshot"}
-                  </div>
-                  <HealthBadge health={health} />
-                </div>
+                <HealthBadge health={health} />
               </div>
             </section>
 

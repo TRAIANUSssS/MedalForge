@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import { ActivityFeedItem } from "../components/playground/ActivityFeedItem";
 import { DesignSection } from "../components/playground/DesignSection";
@@ -16,7 +16,6 @@ import {
   metricCards,
   recommendationCards,
 } from "../components/playground/mockData";
-import { capturePageAsPng } from "../utils/pageCapture";
 
 const primarySidebarItems = ["Dashboard", "Maps", "Stats", "Charts", "Grind Queue"];
 const utilitySidebarItems = ["Settings", "Design Playground"];
@@ -74,33 +73,9 @@ const weeklyTargetCard = {
 } as const;
 
 export function DesignPlaygroundPage({ onNavigate }: { onNavigate: (path: string) => void }) {
-  const pageRef = useRef<HTMLDivElement | null>(null);
-  const [captureState, setCaptureState] = useState<"idle" | "running" | "done" | "error">("idle");
-
-  async function handleCapturePage() {
-    if (!pageRef.current || captureState === "running") {
-      return;
-    }
-
-    setCaptureState("running");
-
-    try {
-      await capturePageAsPng(
-        pageRef.current,
-        `medalforge-design-playground-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.png`,
-      );
-      setCaptureState("done");
-      window.setTimeout(() => setCaptureState("idle"), 1800);
-    } catch {
-      setCaptureState("error");
-      window.setTimeout(() => setCaptureState("idle"), 2400);
-    }
-  }
-
   return (
     <div
       className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_12%_7%,rgba(43,196,255,0.20),transparent_34%),radial-gradient(circle_at_36%_12%,rgba(125,227,255,0.12),transparent_34%),radial-gradient(circle_at_76%_10%,rgba(80,210,255,0.10),transparent_32%),radial-gradient(circle_at_50%_32%,rgba(17,75,122,0.18),transparent_40%),radial-gradient(circle_at_78%_62%,rgba(22,118,184,0.14),transparent_34%),radial-gradient(circle_at_32%_86%,rgba(43,196,255,0.11),transparent_34%),radial-gradient(circle_at_72%_92%,rgba(125,227,255,0.08),transparent_28%),radial-gradient(circle_at_50%_100%,rgba(22,118,184,0.16),transparent_48%),linear-gradient(180deg,#2a769f_0%,#246d97_18%,#1d5d87_44%,#1a4f79_72%,#18496f_100%)] text-slate-100"
-      ref={pageRef}
     >
       <div className="playground-telemetry-grid pointer-events-none absolute inset-0 opacity-[0.035]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[linear-gradient(180deg,rgba(186,236,255,0.05),rgba(125,227,255,0.03),transparent)]" />
@@ -143,25 +118,13 @@ export function DesignPlaygroundPage({ onNavigate }: { onNavigate: (path: string
               >
                 Alias route /playground
               </button>
-              <button
-                className="rounded-full border border-cyan-200/24 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-slate-100 backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-cyan-100/34 hover:bg-white/[0.06] sm:col-span-2"
-                disabled={captureState === "running"}
-                type="button"
-                onClick={() => void handleCapturePage()}
-              >
-                {captureState === "running" ? "Capturing full page..." : "Save full-page PNG"}
-              </button>
               <div className="rounded-[22px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))] p-4 backdrop-blur-md sm:col-span-2">
                 <p className="font-mono text-xs font-black uppercase tracking-[0.28em] text-sky-50/58">Sandbox rules</p>
                 <p className="mt-3 text-sm leading-6 text-sky-50/72">
                   No API calls, no backend mutations, no SQLite touch. Everything below is driven by local mock data
                   shaped like current and planned project entities.
                 </p>
-                <p className="mt-3 font-mono text-xs uppercase tracking-[0.24em] text-sky-100/40">
-                  {captureState === "done" ? "PNG saved" : null}
-                  {captureState === "error" ? "Capture failed" : null}
-                  {captureState === "idle" || captureState === "running" ? "Use this for full-page review screenshots" : null}
-                </p>
+                <p className="mt-3 font-mono text-xs uppercase tracking-[0.24em] text-sky-100/40">Use this route for full mock-only UI iteration.</p>
               </div>
             </div>
           </div>

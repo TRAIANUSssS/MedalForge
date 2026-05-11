@@ -12,10 +12,16 @@ export function AppSidebar({
   activePath,
   onNavigate,
   progress,
+  onCapturePage,
+  captureState = "idle",
+  showChallengeDebug = false,
 }: {
   activePath: string;
   onNavigate: (path: string) => void;
   progress?: { earned: number; total: number } | null;
+  onCapturePage?: () => void;
+  captureState?: "idle" | "running" | "done" | "error";
+  showChallengeDebug?: boolean;
 }) {
   const earned = progress?.earned ?? 0;
   const total = progress?.total ?? 0;
@@ -35,7 +41,7 @@ export function AppSidebar({
         </span>
       </button>
 
-      <div className="relative mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
+      <div className="app-sidebar-scroll relative mt-6 min-h-0 flex-1 overflow-y-auto pr-1">
         <nav className="relative" aria-label="Main navigation">
           <p className="mb-2 font-mono text-[11px] font-black uppercase tracking-[0.24em] text-sky-50/52">
             Core views
@@ -104,29 +110,51 @@ export function AppSidebar({
         <div className="relative mt-4 overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-4 backdrop-blur-md">
           <div className="playground-atmospheric-bloom-soft pointer-events-none absolute left-[-1rem] top-[-1rem] h-20 w-20 rounded-full opacity-45 blur-2xl" />
           <p className="relative font-mono text-xs font-black uppercase tracking-[0.28em] text-sky-50/56">
-            TARGETS
+            DEBUG
           </p>
-          <p className="relative mt-2 text-sm leading-6 text-sky-100/66">
-            Generate a new random challenge set for the dashboard block.
-          </p>
-          <button
-            className="relative mt-4 w-full rounded-full border border-cyan-200/24 bg-[#2bc4ff]/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition duration-200 hover:-translate-y-0.5 hover:border-cyan-100/36 hover:bg-[#2bc4ff]/16 hover:shadow-[0_12px_28px_rgba(43,196,255,0.12)]"
-            type="button"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent("medalforge:reroll-challenge-targets"));
-            }}
-          >
-            Reroll targets
-          </button>
-          <button
-            className="relative mt-2 w-full rounded-full border border-white/14 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-sky-50/84 transition duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.06]"
-            type="button"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent("medalforge:reroll-edge-challenge-targets"));
-            }}
-          >
-            Reroll 0-3 targets
-          </button>
+          <div className="relative mt-4 grid gap-2.5">
+            {onCapturePage ? (
+              <button
+                className="w-full rounded-full border border-cyan-200/24 bg-[#2bc4ff]/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition duration-200 hover:-translate-y-0.5 hover:border-cyan-100/36 hover:bg-[#2bc4ff]/16 hover:shadow-[0_12px_28px_rgba(43,196,255,0.12)]"
+                disabled={captureState === "running"}
+                type="button"
+                onClick={onCapturePage}
+              >
+                {captureState === "running" ? "Capturing full page..." : "Save full-page PNG"}
+              </button>
+            ) : null}
+            {showChallengeDebug ? (
+              <button
+                className="w-full rounded-full border border-cyan-200/24 bg-[#2bc4ff]/10 px-4 py-3 text-sm font-semibold text-cyan-50 transition duration-200 hover:-translate-y-0.5 hover:border-cyan-100/36 hover:bg-[#2bc4ff]/16 hover:shadow-[0_12px_28px_rgba(43,196,255,0.12)]"
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("medalforge:reroll-challenge-targets"));
+                }}
+              >
+                Reroll targets
+              </button>
+            ) : null}
+            {showChallengeDebug ? (
+              <button
+                className="w-full rounded-full border border-white/14 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-sky-50/84 transition duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.06]"
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent("medalforge:reroll-edge-challenge-targets"));
+                }}
+              >
+                Reroll 0-3 targets
+              </button>
+            ) : null}
+            {onCapturePage ? (
+              <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-50/46">
+                {captureState === "done"
+                  ? "PNG saved"
+                  : captureState === "error"
+                    ? "Capture failed"
+                    : "Page capture"}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
