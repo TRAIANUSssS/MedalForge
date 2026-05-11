@@ -31,7 +31,7 @@ frontend/
 
 Framework: FastAPI
 
-The backend owns all external API access. The frontend should not call Warrior, Nadeo, or Trackmania
+The backend owns all external API access. The frontend should not call Warrior, Nadeo, Trackmania Exchange, or Trackmania
 OAuth APIs directly.
 
 Current routes:
@@ -40,6 +40,7 @@ Current routes:
 - `POST /api/sync/warrior-data`
 - `POST /api/sync/warrior-positions`
 - `POST /api/sync/player-pbs`
+- `POST /api/sync/tmx-map-info`
 - `GET /api/auth/trackmania/start`
 - `GET /api/auth/trackmania/callback`
 - `GET /api/auth/trackmania/status`
@@ -63,7 +64,7 @@ The current schema is created with SQLAlchemy metadata on application startup. T
 
 Tables:
 
-- `warrior_maps` - source map metadata and Warrior medal times
+- `warrior_maps` - source map metadata, Warrior medal times, and stored TMX enrichment
 - `map_positions` - world positions for Warrior/author/PB times
 - `player_records` - current player PB per map
 - `player_record_history` - PB history snapshots
@@ -80,14 +81,16 @@ Preferred order:
 
 1. Warrior data
 2. Warrior positions
-3. Connect Trackmania account through OAuth
-4. Player PBs
-5. Progress snapshot
+3. TMX map info
+4. Connect Trackmania account through OAuth
+5. Player PBs
+6. Progress snapshot
 
 Principles:
 
 - cache raw external responses;
 - store Trackmania OAuth tokens locally and never expose them to frontend responses;
+- store TMX map identifiers/links/thumbnails/tags locally and expose them through backend DTOs only;
 - parse Warrior data from the local raw cache after refresh;
 - parse defensively;
 - support parsing from local cache when the external source is unavailable;
@@ -142,7 +145,9 @@ Current dashboard target-card flow:
 - standard reroll selects normal missing/not-earned targets;
 - edge-case reroll can intentionally generate `0-3` real targets to test late-progress states;
 - selection is persisted in browser `localStorage`;
-- sidebar actions communicate with the dashboard through browser `CustomEvent`s instead of a global state library.
+- sidebar actions communicate with the dashboard through browser `CustomEvent`s instead of a global state library;
+- external challenge links are resolved from backend-returned metadata with priority `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
+- Weekly Challenge thumbnail priority is `tmx_thumbnail_url -> thumbnail_url -> local glass placeholder`.
 
 ## MVP Boundaries
 

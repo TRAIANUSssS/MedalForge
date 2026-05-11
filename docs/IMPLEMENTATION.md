@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.3: Dashboard target-card integration and late-progress edge states.
+- Sprint 6.4: TMX enrichment, challenge-card external links, and Settings TMX sync controls.
 
 ## Stage Checklist
 
@@ -33,6 +33,7 @@ Current focus:
 | Sprint 6.1: Frontend visual foundation | Done | Design playground, manual frontend routing, progress entry page, reusable hero Warrior progress bar | Frontend opens on `/`, dashboard remains on `/dashboard`, `npm run build` |
 | Sprint 6.2: Workspace split and dashboard polish | Done | Separate `Maps` and `Settings` workspaces, fixed shared sidebar, compact sticky progress, dashboard visual polish | `/dashboard`, `/maps`, `/settings` open correctly and `npm run build` passes |
 | Sprint 6.3: Challenge target cards | Done | Dashboard `CHALLENGE YOURSELF` block, sidebar reroll actions, localStorage persistence, completion placeholders/celebration state | `/dashboard` shows 3 daily rows + 1 weekly card, reroll works, build passes |
+| Sprint 6.4: TMX map enrichment | Done | Backend TMX sync, stored TMX metadata, dashboard TMX links/thumbs, Settings TMX sync action | `POST /api/sync/tmx-map-info`, `/dashboard`, and `npm run build` all pass |
 
 ## Completed Notes
 
@@ -333,7 +334,7 @@ Implemented:
   - `best_margin_maps`.
 - Latest local visibility blocks:
   - `latest_progress_snapshot`;
-  - `latest_sync_jobs` for `warrior_data`, `warrior_positions`, and `player_pbs`.
+  - `latest_sync_jobs` for `warrior_data`, `warrior_positions`, `player_pbs`, and `tmx_map_info`.
 - Frontend dashboard-first layout with:
   - overall progress bar;
   - summary cards;
@@ -437,6 +438,17 @@ Implemented:
   - placeholder daily cards when there are fewer than 3 real daily targets;
   - celebration / completion card when the edge reroll returns 0 real targets.
 - Shared `BEAT NOW` CTA shimmer styling moved into reusable frontend styling and used in production.
+- Daily and weekly challenge cards now resolve external links through backend-supplied map metadata:
+  - prefer `tmx_url`;
+  - fallback to `trackmania_io_url`;
+  - fallback to Trackmania.io leaderboard URL built from `map_id` + `map_uid`.
+- Weekly Challenge now prefers backend-synced `tmx_thumbnail_url`, with fallback to the stored map thumbnail and then the existing glass placeholder.
+- Daily and weekly challenge descriptions are now drawn from stable frontend description pools keyed by card semantic state and `map_uid`, so text does not jump on rerender.
+- Dashboard layering was lightly refined with subtle grouped wrappers for:
+  - summary stats;
+  - recommendation columns;
+  - sync telemetry row.
+- Sync telemetry wording is now compact `sync ... ago`, and the telemetry row lives below the recommendation area instead of higher in the dashboard flow.
 
 Behavior:
 
@@ -461,6 +473,68 @@ Manual checks:
 - reload and confirm target persistence
 - use sidebar reroll buttons and confirm the block updates
 - use edge reroll and confirm placeholders / completion state
+
+### Sprint 6.4: TMX Map Enrichment
+
+Status: Done
+
+Implemented:
+
+- `backend/app/services/tmx_sync_service.py` for backend-only Trackmania Exchange enrichment.
+- `POST /api/sync/tmx-map-info`.
+- lightweight SQLite schema extension on `warrior_maps` with nullable TMX fields:
+  - `tmx_track_id`
+  - `tmx_url`
+  - `tmx_thumbnail_url`
+  - `tmx_tags_json`
+  - `tmx_tag_names_json`
+  - `tmx_difficulty_name`
+  - `tmx_route_name`
+  - `tmx_length_name`
+  - `tmx_style_name`
+  - `tmx_type_name`
+  - `tmx_synced_at`
+- TMX tags dictionary sync through `GET https://trackmania.exchange/api/tags/gettags`.
+- TMX map lookup through `GET https://trackmania.exchange/api/maps/get_map_info/uid/{mapUid}` with:
+  - `User-Agent: MedalForge/0.1`
+  - `Accept: application/json`
+  - timeout and lightweight retry behavior.
+- `GET /api/maps` and dashboard summary map DTOs now expose TMX-enriched fields for frontend use.
+- `SettingsPage` now includes a manual `Sync TMX data` button that runs TMX enrichment with `force=true`.
+- Dashboard challenge cards now:
+  - open TMX links when available;
+  - prefer TMX thumbnails for Weekly Challenge.
+
+Behavior:
+
+- `force=false` skips maps that already have TMX enrichment markers.
+- maps not found on TMX do not fail the whole sync;
+- sync jobs record `tmx_map_info` history in `sync_jobs`;
+- frontend never calls TMX directly.
+
+Verification:
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe -m compileall app
+```
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe - <<'PY'
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+print(client.post("/api/sync/tmx-map-info?limit=5&force=true").json())
+print(client.get("/api/maps?limit=2").json()["items"][0])
+PY
+```
+
+```powershell
+cd frontend
+npm run build
+```
 ```
 
 ### Sprint 6.1: Frontend Visual Foundation

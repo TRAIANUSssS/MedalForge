@@ -59,8 +59,14 @@ Current characteristics:
 - compact map recommendation cards without campaign/company chips;
 - `CHALLENGE YOURSELF` target block directly under the summary stats grid;
 - three compact daily target rows plus one weekly challenge card;
+- subtle grouped wrappers for summary stats, recommendation columns, and bottom sync telemetry;
+- sync telemetry row moved below recommendations and uses compact `sync ... ago` wording;
 - dashboard-local target persistence through `localStorage`;
-- sidebar actions for normal reroll and edge-case `0-3 targets` reroll.
+- sidebar actions for normal reroll and edge-case `0-3 targets` reroll;
+- daily and weekly `BEAT NOW` CTA links open external map pages in a new tab;
+- external link priority is `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
+- Weekly Challenge now prefers `tmx_thumbnail_url`, falls back to the stored map thumbnail, and then to the existing glass placeholder;
+- daily and weekly challenge descriptions now come from stable description pools instead of a single hardcoded sentence.
 - links users into `Maps` for the full database table and into `Settings` for sync/account actions.
 
 ### Maps Page
@@ -96,9 +102,10 @@ Purpose:
 Current characteristics:
 
 - fixed desktop sidebar layout consistent with dashboard/maps;
-- sync control cards for Warrior data, positions, and PB sync;
+- sync control cards for Warrior data, positions, PB sync, and TMX metadata sync;
 - Trackmania OAuth connect/disconnect/check actions;
-- latest sync status block lives here instead of on the main dashboard.
+- latest sync status block lives here instead of on the main dashboard;
+- TMX sync runs from the frontend only through the local backend endpoint, never against TMX directly.
 
 ### Design Playground
 

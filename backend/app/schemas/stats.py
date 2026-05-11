@@ -6,6 +6,15 @@ from pydantic import BaseModel
 class SummaryMapItem(BaseModel):
     map_uid: str
     map_id: str | None = None
+    tmx_track_id: int | None = None
+    tmx_url: str | None = None
+    tmx_thumbnail_url: str | None = None
+    tmx_tag_names: list[str] | None = None
+    tmx_difficulty_name: str | None = None
+    tmx_route_name: str | None = None
+    tmx_length_name: str | None = None
+    tmx_style_name: str | None = None
+    tmx_type_name: str | None = None
     name: str | None = None
     author_name: str | None = None
     category: str | None = None
@@ -52,6 +61,7 @@ class LatestSyncJobsSummary(BaseModel):
     warrior_data: LatestSyncJobSummary | None = None
     warrior_positions: LatestSyncJobSummary | None = None
     player_pbs: LatestSyncJobSummary | None = None
+    tmx_map_info: LatestSyncJobSummary | None = None
 
 
 class StatsSummaryResponse(BaseModel):

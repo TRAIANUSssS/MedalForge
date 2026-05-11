@@ -27,6 +27,7 @@ def get_dashboard_summary(db) -> dict:
             "warrior_data": _sync_job_to_dict(get_latest_sync_job_for_type(db, job_type="warrior_data")),
             "warrior_positions": _sync_job_to_dict(get_latest_sync_job_for_type(db, job_type="warrior_positions")),
             "player_pbs": _sync_job_to_dict(get_latest_sync_job_for_type(db, job_type="player_pbs")),
+            "tmx_map_info": _sync_job_to_dict(get_latest_sync_job_for_type(db, job_type="tmx_map_info")),
         },
     }
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Sequence
 
 from sqlalchemy import Select, case, desc, func, select
@@ -169,6 +170,15 @@ def _summary_maps_statement(*, account_id: str | None) -> Select:
         select(
             WarriorMap.map_uid,
             WarriorMap.map_id,
+            WarriorMap.tmx_track_id,
+            WarriorMap.tmx_url,
+            WarriorMap.tmx_thumbnail_url,
+            WarriorMap.tmx_tag_names_json,
+            WarriorMap.tmx_difficulty_name,
+            WarriorMap.tmx_route_name,
+            WarriorMap.tmx_length_name,
+            WarriorMap.tmx_style_name,
+            WarriorMap.tmx_type_name,
             WarriorMap.name,
             WarriorMap.author_name,
             WarriorMap.category,
@@ -191,15 +201,24 @@ def _summary_maps_statement(*, account_id: str | None) -> Select:
 def _summary_row_to_dict(row: Sequence[object]) -> dict:
     map_uid = row[0]
     map_id = row[1]
-    name = row[2]
-    author_name = row[3]
-    category = row[4]
-    campaign_name = row[5]
-    warrior_time_ms = row[6]
-    pb_time_ms = row[7]
-    diff_to_warrior_ms = row[8]
-    required_position = row[9]
-    position_status = row[10]
+    tmx_track_id = row[2]
+    tmx_url = row[3]
+    tmx_thumbnail_url = row[4]
+    tmx_tag_names_json = row[5]
+    tmx_difficulty_name = row[6]
+    tmx_route_name = row[7]
+    tmx_length_name = row[8]
+    tmx_style_name = row[9]
+    tmx_type_name = row[10]
+    name = row[11]
+    author_name = row[12]
+    category = row[13]
+    campaign_name = row[14]
+    warrior_time_ms = row[15]
+    pb_time_ms = row[16]
+    diff_to_warrior_ms = row[17]
+    required_position = row[18]
+    position_status = row[19]
 
     margin_vs_warrior_ms = None
     if diff_to_warrior_ms is not None:
@@ -208,6 +227,15 @@ def _summary_row_to_dict(row: Sequence[object]) -> dict:
     return {
         "map_uid": map_uid,
         "map_id": map_id,
+        "tmx_track_id": tmx_track_id,
+        "tmx_url": tmx_url,
+        "tmx_thumbnail_url": tmx_thumbnail_url,
+        "tmx_tag_names": _parse_json_array(tmx_tag_names_json),
+        "tmx_difficulty_name": tmx_difficulty_name,
+        "tmx_route_name": tmx_route_name,
+        "tmx_length_name": tmx_length_name,
+        "tmx_style_name": tmx_style_name,
+        "tmx_type_name": tmx_type_name,
         "name": name,
         "author_name": author_name,
         "category": category,
@@ -220,6 +248,18 @@ def _summary_row_to_dict(row: Sequence[object]) -> dict:
         "position_status": position_status,
         "difficulty_tier": difficulty_tier_from_position(required_position),
     }
+
+
+def _parse_json_array(value: str | None) -> list[str] | None:
+    if not value:
+        return None
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, list):
+        return None
+    return [item for item in parsed if isinstance(item, str)]
 
 
 def _count_player_records(db: Session, *, account_id: str | None, predicate) -> int:

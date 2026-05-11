@@ -72,6 +72,22 @@ Response:
 }
 ```
 
+Map items now include TMX enrichment fields when available:
+
+```json
+{
+  "tmx_track_id": 291398,
+  "tmx_url": "https://trackmania.exchange/mapshow/291398",
+  "tmx_thumbnail_url": "https://trackmania.exchange/maps/thumbnail/291398",
+  "tmx_tag_names": ["Race", "MultiLap", "Clones"],
+  "tmx_difficulty_name": "Intermediate",
+  "tmx_route_name": "MultiLap",
+  "tmx_length_name": "2 min",
+  "tmx_style_name": "Dirt",
+  "tmx_type_name": "Race"
+}
+```
+
 ### GET /api/maps/meta
 
 Returns metadata for maps table filters.
@@ -265,6 +281,43 @@ Notes:
 - each sync creates one aggregate `progress_snapshots` row;
 - missing/expired Trackmania OAuth connection returns `400`.
 
+### POST /api/sync/tmx-map-info
+
+Uses the Trackmania Exchange backend API to enrich local Warrior maps with TMX identifiers, links,
+thumbnail URLs, tags, and selected metadata.
+
+Query params:
+
+```text
+limit=optional integer
+force=false
+```
+
+`force=true` rechecks all eligible local maps instead of skipping previously synced rows.
+
+Response:
+
+```json
+{
+  "job_id": 3,
+  "status": "success",
+  "items_total": 4559,
+  "items_success": 4559,
+  "items_failed": 0,
+  "inserted": 4559,
+  "updated": 0,
+  "skipped": 0
+}
+```
+
+Notes:
+
+- backend calls `GET https://trackmania.exchange/api/maps/get_map_info/uid/{mapUid}`;
+- backend also refreshes the TMX tags dictionary through `GET https://trackmania.exchange/api/tags/gettags`;
+- TMX requests include `User-Agent: MedalForge/0.1`;
+- frontend never calls TMX directly;
+- maps not found on TMX are skipped without failing the whole sync.
+
 ### GET /api/stats/summary
 
 Returns dashboard summary, top map lists, latest progress snapshot, and latest sync jobs.
@@ -293,10 +346,23 @@ Response shape:
   "latest_sync_jobs": {
     "warrior_data": null,
     "warrior_positions": null,
-    "player_pbs": null
+    "player_pbs": null,
+    "tmx_map_info": null
   }
 }
 ```
+
+Summary map lists now also expose TMX-enriched fields:
+
+- `tmx_track_id`
+- `tmx_url`
+- `tmx_thumbnail_url`
+- `tmx_tag_names`
+- `tmx_difficulty_name`
+- `tmx_route_name`
+- `tmx_length_name`
+- `tmx_style_name`
+- `tmx_type_name`
 
 ## Planned MVP Endpoints
 

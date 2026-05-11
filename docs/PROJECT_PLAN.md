@@ -299,6 +299,17 @@ campaign_type
 club_name
 thumbnail_url
 trackmania_io_url
+tmx_track_id
+tmx_url
+tmx_thumbnail_url
+tmx_tags_json
+tmx_tag_names_json
+tmx_difficulty_name
+tmx_route_name
+tmx_length_name
+tmx_style_name
+tmx_type_name
+tmx_synced_at
 author_time_ms
 gold_time_ms
 silver_time_ms
@@ -467,6 +478,7 @@ warrior_data
 map_info
 warrior_positions
 player_pbs
+tmx_map_info
 pb_positions
 all
 ```

@@ -22,6 +22,10 @@ const subduedCardClass =
   "rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] backdrop-blur-[22px]";
 const interactiveCardClass =
   "transition duration-200 hover:-translate-y-0.5 hover:border-white/16 hover:bg-white/[0.055] hover:shadow-[0_18px_42px_rgba(11,47,84,0.16)]";
+const dashboardGroupFrameClass =
+  "relative overflow-hidden rounded-[30px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.032),rgba(255,255,255,0.018),rgba(10,32,52,0.038))] shadow-[0_10px_28px_rgba(8,35,70,0.06)] backdrop-blur-[16px]";
+const dashboardGroupInnerGlowClass =
+  "pointer-events-none absolute inset-[1px] rounded-[29px] border border-white/5 bg-[radial-gradient(circle_at_top,rgba(186,236,255,0.04),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.026),rgba(255,255,255,0.010),transparent)]";
 const actionSecondaryClass =
   "rounded-full border border-white/12 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-slate-100 transition duration-200 hover:-translate-y-0.5 hover:border-white/18 hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-50";
 const actionPrimaryClass =
@@ -40,6 +44,108 @@ const challengePlaceholderSubtitles: Record<(typeof challengePlaceholderTitles)[
 const challengeCompletionQuote =
   "Straight roads are for fast cars. Turns are for fast drivers.";
 const challengeCompletionQuoteAuthor = "Colin McRae";
+const dailyChallengeDescriptions = {
+  missing: [
+    "Fresh target with no synced PB yet.",
+    "Untouched route waiting for a first clean line.",
+    "Good candidate for a first serious attempt.",
+    "No stable run recorded on this map yet.",
+    "Still completely open for progression.",
+    "A clean baseline run could change everything.",
+    "One of the remaining untouched targets.",
+    "No synced progress on this route so far.",
+    "Early attempts should reveal the main lines.",
+    "Good map for discovering a new rhythm.",
+    "A blank entry in the current grind path.",
+    "Still waiting for its first confident PB.",
+    "Low-pressure target for exploration attempts.",
+    "No history here yet. Start building consistency.",
+    "Fresh route with room for experimentation.",
+    "Nothing locked in yet on this map.",
+    "A good opportunity for a first breakthrough.",
+    "This route still has untapped potential.",
+    "No synced replay line available yet.",
+    "A fresh target ready for early session attempts.",
+  ],
+  close: [
+    "Already close. A cleaner line should convert it.",
+    "Strong potential for a short retry session.",
+    "One focused attempt could secure this medal.",
+    "The pace is already there. Just stabilize it.",
+    "Close enough to justify another quick session.",
+    "Only minor mistakes separate this from Warrior.",
+    "The current PB already shows good pace.",
+    "Small cleanup target with reliable conversion odds.",
+    "A safer grind target with visible progress.",
+    "The difficult part is mostly behind you.",
+    "This route is already trending in the right direction.",
+    "Current consistency suggests a near-term conversion.",
+    "Good target for a focused retry block.",
+    "One cleaner sector could finish this map.",
+    "The margin is manageable with stable execution.",
+    "Already close enough to feel realistic.",
+    "A few sharper turns could secure the run.",
+    "This map is entering conversion territory.",
+    "Solid pace. Needs a calmer finish.",
+    "Worth revisiting while the rhythm is fresh.",
+  ],
+  nearMiss: [
+    "Almost there. One clean run should do it.",
+    "The medal is already within reach.",
+    "Tiny improvements could finish this target.",
+    "One stable replay away from conversion.",
+    "This route is practically solved already.",
+    "The current PB is dangerously close.",
+    "Only milliseconds remain between you and Warrior.",
+    "The next clean attempt could be enough.",
+    "This target is deep in near-miss territory.",
+    "The required pace is already visible.",
+    "One confident finish should secure it.",
+    "The gap is now mostly execution.",
+    "This map deserves one more serious push.",
+    "The line is there. It just needs commitment.",
+    "Very high conversion odds on the next session.",
+    "The hardest part may already be done.",
+    "A near-perfect attempt should close the gap.",
+    "The remaining difference is now razor-thin.",
+    "One cleaner recovery could finish this route.",
+    "This medal is already starting to crack.",
+  ],
+  earned: [
+    "Already secured. Safe replay territory.",
+    "This target has already been conquered.",
+    "Warrior pace already achieved here.",
+    "A completed route with stable progress.",
+    "This map is already part of the collection.",
+    "The difficult work here is already finished.",
+    "A secured result with room for refinement.",
+    "Already cleared with a synced Warrior PB.",
+    "The medal is safe. Improvement is optional.",
+    "A completed target worth revisiting casually.",
+    "Already mastered well enough for progression.",
+    "This route no longer needs urgent attention.",
+    "The grind here is already behind you.",
+    "This map is now part of your stable pool.",
+    "Conversion complete. Precision remains optional.",
+    "Already closed out with solid execution.",
+    "The replay already speaks for itself.",
+    "No pressure left on this route anymore.",
+    "This medal is already locked in.",
+    "One less road left unfinished.",
+  ],
+} as const;
+const weeklyChallengeDescriptions = [
+  "Longer session pick with more room for experimentation.",
+  "Good candidate for a deeper route-learning session.",
+  "Weekly-style target suited for calmer grinding.",
+  "A tougher route worth studying over multiple runs.",
+  "More demanding than a typical daily conversion.",
+  "Good map for extended retry sessions and refinement.",
+  "This route rewards patience more than aggression.",
+  "A strong weekly candidate for focused progression.",
+  "Designed for longer sessions and cleaner consistency.",
+  "Better approached with patience than quick retries.",
+] as const;
 
 export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const pageRef = useRef<HTMLDivElement | null>(null);
@@ -254,18 +360,17 @@ function DashboardSection({
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-        <MetricCard detail="Current PBs already beat Warrior" label="Earned" tone="emerald" value={String(summary.earned_count)} />
-        <MetricCard detail={summary.avg_diff_missing_ms !== null ? `Average gap ${formatGap(summary.avg_diff_missing_ms)}` : "No missing PBs yet"} label="Missing" tone="rose" value={String(summary.missing_count)} />
-        <MetricCard detail="Maps with a synced local PB" label="Played" tone="cyan" value={String(summary.played_count)} />
-        <MetricCard detail="Maps with no local PB record" label="Not played" tone="slate" value={String(summary.not_played_count)} />
+      <section className={`${dashboardGroupFrameClass} p-3.5 md:p-4`}>
+        <div className={dashboardGroupInnerGlowClass} />
+        <div className="relative grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+          <MetricCard detail="Current PBs already beat Warrior" label="Earned" tone="emerald" value={String(summary.earned_count)} />
+          <MetricCard detail={summary.avg_diff_missing_ms !== null ? `Average gap ${formatGap(summary.avg_diff_missing_ms)}` : "No missing PBs yet"} label="Missing" tone="rose" value={String(summary.missing_count)} />
+          <MetricCard detail="Maps with a synced local PB" label="Played" tone="cyan" value={String(summary.played_count)} />
+          <MetricCard detail="Maps with no local PB record" label="Not played" tone="slate" value={String(summary.not_played_count)} />
+        </div>
       </section>
 
       <ChallengeTargetsBlock totalMaps={summary.total_maps} />
-
-      <section className="grid gap-3 xl:grid-cols-3">
-        {freshnessItems.map((item) => <FreshnessPill detail={item.detail} key={item.label} label={item.label} tone={item.tone} />)}
-      </section>
 
       {!summary.has_player_pbs ? (
         <section className={`${glassCardClass} p-6 md:p-7`}>
@@ -285,12 +390,22 @@ function DashboardSection({
           </div>
         </section>
       ) : (
-        <section className="grid gap-4 2xl:grid-cols-3">
-          <SummaryListBlock emptyMessage="No close missing medals right now." items={summary.closest_missing_maps} subtitle="Closest misses by current PB gap" title="Close medals" valueType="gap" />
-          <SummaryListBlock emptyMessage="No quick wins available yet." items={summary.quick_wins} subtitle="Reachable missing medals with the best payoff" title="Quick wins" valueType="gap" />
-          <SummaryListBlock emptyMessage="No earned Warrior medals yet." items={summary.best_margin_maps} subtitle="Maps where your PB is safely ahead of Warrior" title="Best margins" valueType="margin" />
+        <section className={`${dashboardGroupFrameClass} p-3.5 md:p-4`}>
+          <div className={dashboardGroupInnerGlowClass} />
+          <div className="relative grid gap-4 2xl:grid-cols-3">
+            <SummaryListBlock emptyMessage="No close missing medals right now." items={summary.closest_missing_maps} subtitle="Closest misses by current PB gap" title="Close medals" valueType="gap" />
+            <SummaryListBlock emptyMessage="No quick wins available yet." items={summary.quick_wins} subtitle="Reachable missing medals with the best payoff" title="Quick wins" valueType="gap" />
+            <SummaryListBlock emptyMessage="No earned Warrior medals yet." items={summary.best_margin_maps} subtitle="Maps where your PB is safely ahead of Warrior" title="Best margins" valueType="margin" />
+          </div>
         </section>
       )}
+
+      <section className={`${dashboardGroupFrameClass} p-3 md:p-3.5`}>
+        <div className={dashboardGroupInnerGlowClass} />
+        <div className="relative grid gap-3 xl:grid-cols-3">
+          {freshnessItems.map((item) => <FreshnessPill detail={item.detail} key={item.label} label={item.label} tone={item.tone} />)}
+        </div>
+      </section>
     </section>
   );
 }
@@ -499,6 +614,7 @@ function ChallengeTargetsReadyState({
 function DashboardChallengeDailyRow({ map }: { map: MapListItem }) {
   const accent = getChallengeAccent(map, "daily");
   const hint = getChallengeHint(map, "daily");
+  const externalUrl = getMapExternalUrl(map);
 
   return (
     <article className={`group relative overflow-hidden rounded-[20px] border p-3 backdrop-blur-[20px] transition duration-200 hover:-translate-y-0.5 md:p-3.5 ${accent.shell}`}>
@@ -525,7 +641,7 @@ function DashboardChallengeDailyRow({ map }: { map: MapListItem }) {
           <ChallengeStatPill label="Diff" value={formatDiffCompact(map)} valueClassName={accent.diffClass} compact />
         </div>
         <div className="xl:justify-self-end">
-          <button className={`${beatNowButtonClass} px-4 py-2.5 text-[13px]`} type="button">BEAT NOW</button>
+          <BeatNowLink href={externalUrl} sizeClassName="px-4 py-2.5 text-[13px]" />
         </div>
       </div>
     </article>
@@ -567,6 +683,7 @@ function DashboardChallengePlaceholderRow({ title }: { title: (typeof challengeP
 function DashboardChallengeWeeklyCard({ map }: { map: MapListItem }) {
   const accent = getChallengeAccent(map, "weekly");
   const weeklyShellClass = "weeklyShell" in accent ? accent.weeklyShell : accent.shell;
+  const externalUrl = getMapExternalUrl(map);
 
   return (
     <article className={`group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[24px] border p-5 backdrop-blur-[22px] transition duration-200 hover:-translate-y-0.5 md:p-6 ${weeklyShellClass}`}>
@@ -582,14 +699,7 @@ function DashboardChallengeWeeklyCard({ map }: { map: MapListItem }) {
               {cleanTrackmaniaText(map.name) ?? "Unnamed map"}
             </h4>
           </div>
-          <div className="relative h-[6.25rem] w-[6.25rem] min-w-[6.25rem] overflow-hidden rounded-[20px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(33,12,53,0.20))]">
-            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(167,139,250,0.22),rgba(125,227,255,0.06),transparent)]" />
-            <div className="playground-telemetry-grid pointer-events-none absolute inset-0 opacity-[0.08]" />
-            <div className="absolute inset-x-3 bottom-3">
-              <p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-sky-50/52">Target</p>
-              <p className="mt-1 text-xs font-semibold text-slate-100">Weekly pick</p>
-            </div>
-          </div>
+          <WeeklyChallengeThumbnail map={map} />
         </div>
 
         <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap">
@@ -611,7 +721,7 @@ function DashboardChallengeWeeklyCard({ map }: { map: MapListItem }) {
         </div>
 
         <div className="mt-auto pt-5">
-          <button className={`${beatNowButtonClass} px-5 py-3 text-sm`} type="button">BEAT NOW</button>
+          <BeatNowLink href={externalUrl} sizeClassName="px-5 py-3 text-sm" />
         </div>
       </div>
     </article>
@@ -668,6 +778,59 @@ function FreshnessPill({ label, detail, tone }: { label: string; detail: string;
     muted: "border-white/10 bg-white/[0.03] text-sky-50/72",
   } satisfies Record<string, string>;
   return <article className={`rounded-[18px] border px-4 py-3 ${toneClass[tone]}`}><p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] opacity-70">{label}</p><p className="mt-1.5 text-sm font-semibold text-white">{detail}</p></article>;
+}
+
+function BeatNowLink({ href, sizeClassName }: { href: string | null; sizeClassName: string }) {
+  if (!href) {
+    return (
+      <span
+        aria-disabled="true"
+        className={`inline-flex cursor-not-allowed items-center justify-center rounded-full border border-white/10 bg-white/[0.035] font-semibold text-sky-50/42 opacity-80 ${sizeClassName}`}
+      >
+        BEAT NOW
+      </span>
+    );
+  }
+
+  return (
+    <a
+      className={`inline-flex items-center justify-center ${beatNowButtonClass} ${sizeClassName}`}
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+    >
+      BEAT NOW
+    </a>
+  );
+}
+
+function WeeklyChallengeThumbnail({ map }: { map: MapListItem }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const thumbnailUrl = !imageFailed ? (map.tmx_thumbnail_url ?? map.thumbnail_url ?? null) : null;
+  const altLabel = `${cleanTrackmaniaText(map.name) ?? "Unnamed map"} thumbnail`;
+
+  return (
+    <div className="relative h-[6.25rem] w-[6.25rem] min-w-[6.25rem] overflow-hidden rounded-[20px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(33,12,53,0.20))]">
+      {thumbnailUrl ? (
+        <>
+          <img
+            alt={altLabel}
+            className="absolute inset-0 h-full w-full object-cover opacity-[0.58] saturate-[0.88]"
+            src={thumbnailUrl}
+            onError={() => setImageFailed(true)}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(9,24,40,0.10),rgba(9,24,40,0.34)),linear-gradient(135deg,rgba(167,139,250,0.12),rgba(125,227,255,0.04),transparent)]" />
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(167,139,250,0.22),rgba(125,227,255,0.06),transparent)]" />
+      )}
+      <div className="playground-telemetry-grid pointer-events-none absolute inset-0 opacity-[0.08]" />
+      <div className="absolute inset-x-3 bottom-3">
+        <p className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-sky-50/52">Target</p>
+        <p className="mt-1 text-xs font-semibold text-slate-100">Weekly pick</p>
+      </div>
+    </div>
+  );
 }
 
 function SummaryListBlock({ title, subtitle, items, emptyMessage, valueType }: { title: string; subtitle: string; items: SummaryMapItem[]; emptyMessage: string; valueType: "gap" | "margin" }) {
@@ -781,7 +944,7 @@ function buildFreshnessItems(summary: StatsSummaryResponse) {
 
 function formatFreshness(job: LatestSyncJobSummary | null, fallback: string) {
   if (!job?.finished_at) return fallback;
-  return `${formatRelativeTime(job.finished_at)} ago`;
+  return `sync ${formatRelativeTime(job.finished_at)} ago`;
 }
 function formatRelativeTime(value: string) {
   const diffMs = Math.max(0, Date.now() - new Date(value).getTime());
@@ -817,6 +980,13 @@ function formatPositionSummary(map: SummaryMapItem) {
   if (map.position_status === "over_10000") return "10k+ threshold";
   if (map.required_position) return `Warrior at #${map.required_position}`;
   return "Position not synced";
+}
+function getMapExternalUrl(map: Pick<MapListItem, "tmx_url" | "trackmania_io_url" | "map_id" | "map_uid">) {
+  if (map.tmx_url) return map.tmx_url;
+  if (map.trackmania_io_url) return map.trackmania_io_url;
+  if (map.map_id && map.map_uid) return `https://trackmania.io/#/leaderboard/${map.map_id}/${map.map_uid}`;
+  // TODO: add TMX MapID enrichment later and prefer trackmania.exchange/mapshow/{tmxMapId} when available.
+  return null;
 }
 function getCategoryTone(category: string | null) {
   switch ((category ?? "unknown").toLowerCase()) {
@@ -1023,17 +1193,34 @@ function getDifficultyRank(value: string | null) {
 
 function getChallengeHint(map: MapListItem, mode: "daily" | "weekly") {
   if (mode === "weekly") {
-    if (map.pb_time_ms !== null && map.diff_to_warrior_ms !== null && map.diff_to_warrior_ms <= 1000) {
-      return "Longer session pick with a real conversion line already started.";
-    }
-    return "Longer session pick for route learning and more random grind variety.";
+    return pickStableChallengeDescription(weeklyChallengeDescriptions, `${map.map_uid}:weekly`);
   }
 
-  if (map.pb_time_ms === null) return "Fresh target with no synced PB yet.";
-  if (map.diff_to_warrior_ms !== null && map.diff_to_warrior_ms <= 75) return "Almost there. One clean run should do it.";
-  if (map.diff_to_warrior_ms !== null && map.diff_to_warrior_ms <= 500) return "Close enough for a short focused retry block.";
-  if (map.has_warrior) return "Already earned. Good replay benchmark.";
-  return null;
+  const semanticState = getChallengeSemanticState(map);
+  const descriptionGroup =
+    semanticState === "near_miss"
+      ? dailyChallengeDescriptions.nearMiss
+      : semanticState === "close"
+        ? dailyChallengeDescriptions.close
+        : semanticState === "earned"
+          ? dailyChallengeDescriptions.earned
+          : dailyChallengeDescriptions.missing;
+
+  return pickStableChallengeDescription(descriptionGroup, `${map.map_uid}:daily:${semanticState}`);
+}
+
+function pickStableChallengeDescription(options: readonly string[], seed: string) {
+  if (options.length === 0) return null;
+  const index = hashStringToIndex(seed, options.length);
+  return options[index] ?? options[0] ?? null;
+}
+
+function hashStringToIndex(value: string, modulo: number) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+  return modulo > 0 ? hash % modulo : 0;
 }
 
 function getChallengeSemanticState(map: MapListItem) {

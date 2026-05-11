@@ -37,6 +37,17 @@ export type TrackmaniaAuthStatusResponse = {
 export type MapListItem = {
   map_uid: string;
   map_id: string | null;
+  tmx_track_id?: number | null;
+  tmx_url?: string | null;
+  tmx_thumbnail_url?: string | null;
+  tmx_tag_names?: string[] | null;
+  tmx_difficulty_name?: string | null;
+  tmx_route_name?: string | null;
+  tmx_length_name?: string | null;
+  tmx_style_name?: string | null;
+  tmx_type_name?: string | null;
+  trackmania_io_url?: string | null;
+  thumbnail_url?: string | null;
   name: string | null;
   author_name: string | null;
   category: string | null;
@@ -82,6 +93,15 @@ export type SyncJobResponse = {
 export type SummaryMapItem = {
   map_uid: string;
   map_id: string | null;
+  tmx_track_id?: number | null;
+  tmx_url?: string | null;
+  tmx_thumbnail_url?: string | null;
+  tmx_tag_names?: string[] | null;
+  tmx_difficulty_name?: string | null;
+  tmx_route_name?: string | null;
+  tmx_length_name?: string | null;
+  tmx_style_name?: string | null;
+  tmx_type_name?: string | null;
   name: string | null;
   author_name: string | null;
   category: string | null;
@@ -144,6 +164,7 @@ export type StatsSummaryResponse = {
     warrior_data: LatestSyncJobSummary | null;
     warrior_positions: LatestSyncJobSummary | null;
     player_pbs: LatestSyncJobSummary | null;
+    tmx_map_info?: LatestSyncJobSummary | null;
   };
 };
 
@@ -171,6 +192,14 @@ export async function syncPlayerPbs(options: { limit?: number } = {}): Promise<P
   if (options.limit) query.set("limit", String(options.limit));
   const suffix = query.toString() ? `?${query.toString()}` : "";
   return request<PlayerPbSyncResponse>(`/api/sync/player-pbs${suffix}`, { method: "POST" });
+}
+
+export async function syncTmxMapInfo(options: { limit?: number; force?: boolean } = {}): Promise<WarriorSyncResponse> {
+  const query = new URLSearchParams();
+  if (options.limit) query.set("limit", String(options.limit));
+  if (options.force) query.set("force", "true");
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request<WarriorSyncResponse>(`/api/sync/tmx-map-info${suffix}`, { method: "POST" });
 }
 
 export async function startTrackmaniaAuth(): Promise<{ authorize_url: string }> {

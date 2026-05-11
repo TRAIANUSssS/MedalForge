@@ -1,3 +1,4 @@
+import json
 from collections.abc import Sequence
 
 from sqlalchemy import Select, asc, case, desc, func, or_, select
@@ -162,6 +163,15 @@ def _map_row_to_dict(row: Sequence[object]) -> dict:
     return {
         "map_uid": warrior_map.map_uid,
         "map_id": warrior_map.map_id,
+        "tmx_track_id": warrior_map.tmx_track_id,
+        "tmx_url": warrior_map.tmx_url,
+        "tmx_thumbnail_url": warrior_map.tmx_thumbnail_url,
+        "tmx_tag_names": _parse_json_array(warrior_map.tmx_tag_names_json),
+        "tmx_difficulty_name": warrior_map.tmx_difficulty_name,
+        "tmx_route_name": warrior_map.tmx_route_name,
+        "tmx_length_name": warrior_map.tmx_length_name,
+        "tmx_style_name": warrior_map.tmx_style_name,
+        "tmx_type_name": warrior_map.tmx_type_name,
         "name": warrior_map.name,
         "author_name": warrior_map.author_name,
         "category": warrior_map.category,
@@ -187,3 +197,15 @@ def _map_row_to_dict(row: Sequence[object]) -> dict:
         "user_tags": user_note.tags_json if user_note else None,
         "grind_status": user_note.status if user_note else "none",
     }
+
+
+def _parse_json_array(value: str | None) -> list[str] | None:
+    if not value:
+        return None
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, list):
+        return None
+    return [item for item in parsed if isinstance(item, str)]

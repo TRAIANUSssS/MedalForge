@@ -9,6 +9,7 @@ from app.schemas.sync import PlayerPbSyncResponse, PositionSyncResponse, SyncJob
 from app.services.nadeo_live_service import NadeoLiveConfigError, sync_warrior_positions
 from app.services.trackmania_oauth_service import TrackmaniaOAuthError
 from app.services.trackmania_records_service import TrackmaniaRecordsParseError, sync_player_pbs_from_trackmania
+from app.services.tmx_sync_service import sync_tmx_map_info
 from app.services.warrior_sync_service import sync_warrior_data
 
 
@@ -84,3 +85,15 @@ def sync_player_pbs_route(
         ) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Player PB sync failed: {exc}") from exc
+
+
+@router.post("/tmx-map-info", response_model=WarriorSyncResponse)
+def sync_tmx_map_info_route(
+    limit: int | None = None,
+    force: bool = False,
+    db: Session = Depends(get_db),
+) -> dict:
+    try:
+        return sync_tmx_map_info(db, limit=limit, force=force)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"TMX map info sync failed: {exc}") from exc

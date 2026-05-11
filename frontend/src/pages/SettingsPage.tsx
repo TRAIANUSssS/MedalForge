@@ -9,6 +9,7 @@ import {
   getTrackmaniaAuthStatus,
   startTrackmaniaAuth,
   syncPlayerPbs,
+  syncTmxMapInfo,
   syncWarriorData,
   syncWarriorPositions,
   type HealthResponse,
@@ -83,6 +84,7 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
   const [sync, setSync] = useState<SyncState>({ status: "idle" });
   const [positionSync, setPositionSync] = useState<PositionSyncState>({ status: "idle" });
   const [playerPbSync, setPlayerPbSync] = useState<PlayerPbSyncState>({ status: "idle" });
+  const [tmxSync, setTmxSync] = useState<SyncState>({ status: "idle" });
   const [trackmaniaAuth, setTrackmaniaAuth] = useState<TrackmaniaAuthState>({ status: "loading" });
   const [positionProgress, setPositionProgress] = useState<PositionProgress | null>(null);
   const [captureState, setCaptureState] = useState<"idle" | "running" | "done" | "error">("idle");
@@ -216,6 +218,18 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
       });
   }
 
+  function handleTmxSync(options: { limit?: number; force?: boolean } = { force: true }) {
+    setTmxSync({ status: "running" });
+    syncTmxMapInfo(options)
+      .then((result) => {
+        setTmxSync({ status: "ok", result });
+        refreshSettingsData();
+      })
+      .catch((error: unknown) => {
+        setTmxSync({ status: "error", message: getErrorMessage(error, "Unknown TMX sync error") });
+      });
+  }
+
   async function handleCapturePage() {
     if (!pageRef.current || captureState === "running") return;
     setCaptureState("running");
@@ -321,6 +335,7 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
                         <SyncMessage sync={sync} />
                         <PositionSyncMessage progress={positionProgress} sync={positionSync} />
                         <PlayerPbSyncMessage sync={playerPbSync} />
+                        <TmxSyncMessage sync={tmxSync} />
                       </div>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 xl:w-[420px]">
@@ -343,6 +358,9 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
                         onClick={() => handlePlayerPbSync({ limit: 10 })}
                       >
                         Test PB sync
+                      </button>
+                      <button className={actionSecondaryClass} disabled={tmxSync.status === "running"} type="button" onClick={() => handleTmxSync({ force: true })}>
+                        {tmxSync.status === "running" ? "Syncing TMX..." : "Sync TMX data"}
                       </button>
                     </div>
                   </div>
@@ -371,11 +389,12 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
             </section>
 
             <SyncStatusBlock
-              latestSyncJobs={stats.status === "ok" ? stats.data.latest_sync_jobs : { player_pbs: null, warrior_data: null, warrior_positions: null }}
+              latestSyncJobs={stats.status === "ok" ? stats.data.latest_sync_jobs : { player_pbs: null, warrior_data: null, warrior_positions: null, tmx_map_info: null }}
               playerPbSync={playerPbSync}
               positionProgress={positionProgress}
               positionSync={positionSync}
               sync={sync}
+              tmxSync={tmxSync}
             />
         </main>
       </div>
@@ -395,12 +414,14 @@ function SyncStatusBlock({
   positionSync,
   playerPbSync,
   positionProgress,
+  tmxSync,
 }: {
   latestSyncJobs: StatsSummaryResponse["latest_sync_jobs"];
   sync: SyncState;
   positionSync: PositionSyncState;
   playerPbSync: PlayerPbSyncState;
   positionProgress: PositionProgress | null;
+  tmxSync: SyncState;
 }) {
   const jobs: Array<{ label: string; job: LatestSyncJobSummary | null; currentStatus: string; detail: string }> = [
     {
@@ -421,6 +442,12 @@ function SyncStatusBlock({
       currentStatus: playerPbSync.status === "running" ? "running" : latestSyncJobs.player_pbs?.status ?? "idle",
       detail: playerPbSync.status === "running" ? "Syncing current user PBs from Trackmania OAuth API" : playerPbSync.status === "error" ? playerPbSync.message : formatSyncJobDetail(latestSyncJobs.player_pbs),
     },
+    {
+      label: "TMX map info",
+      job: latestSyncJobs.tmx_map_info ?? null,
+      currentStatus: tmxSync.status === "running" ? "running" : latestSyncJobs.tmx_map_info?.status ?? "idle",
+      detail: tmxSync.status === "running" ? "Refreshing Trackmania Exchange map metadata for all local Warrior maps" : tmxSync.status === "error" ? tmxSync.message : formatSyncJobDetail(latestSyncJobs.tmx_map_info ?? null),
+    },
   ];
 
   return (
@@ -430,7 +457,7 @@ function SyncStatusBlock({
         <h3 className="mt-3 text-2xl font-black tracking-[-0.04em] text-white">Latest local jobs</h3>
         <p className="mt-2 text-sm leading-6 text-sky-100/64">Current state for the three MVP data sources.</p>
       </div>
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
         {jobs.map((item) => (
           <article className="rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-5" key={item.label}>
             <div className="flex items-start justify-between gap-3">
@@ -465,6 +492,13 @@ function PlayerPbSyncMessage({ sync }: { sync: PlayerPbSyncState }) {
   if (sync.status === "running") return <p className="text-sm font-semibold text-cyan-100">Player PB sync is running...</p>;
   if (sync.status === "error") return <p className="text-sm font-semibold text-rose-200">PB sync failed: {sync.message}</p>;
   return <p className="text-sm font-semibold text-emerald-100">PBs {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated, {sync.result.skipped} unchanged, {sync.result.history_inserted} history rows, {sync.result.snapshots_inserted} snapshot.</p>;
+}
+
+function TmxSyncMessage({ sync }: { sync: SyncState }) {
+  if (sync.status === "idle") return null;
+  if (sync.status === "running") return <p className="text-sm font-semibold text-cyan-100">TMX map info sync is running...</p>;
+  if (sync.status === "error") return <p className="text-sm font-semibold text-rose-200">TMX sync failed: {sync.message}</p>;
+  return <p className="text-sm font-semibold text-emerald-100">TMX {sync.result.status}: {sync.result.inserted} inserted, {sync.result.updated} updated, {sync.result.skipped} skipped.</p>;
 }
 
 function TrackmaniaAuthStatus({ auth }: { auth: TrackmaniaAuthState }) {
