@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.5: shared frontend footer polish and documentation alignment.
+- Sprint 6.5 follow-up: dashboard documentation alignment after TMX/category chip polish.
 
 ## Stage Checklist
 
@@ -450,15 +450,22 @@ Implemented:
   - fallback to `trackmania_io_url`;
   - fallback to Trackmania.io leaderboard URL built from `map_id` + `map_uid`.
 - Weekly Challenge now prefers backend-synced `tmx_thumbnail_url`, with fallback to the stored map thumbnail and then the existing glass placeholder.
+- Daily target rows and Weekly Challenge now keep compact chip rows that can show:
+  - semantic status;
+  - map category;
+  - one informational TMX chip when TMX metadata exists.
+- The dashboard TMX chip currently prefers the last saved `tmx_tag_names` entry and falls back to `tmx_style_name`.
 - Recommendation cards in `Close medals`, `Quick wins`, and `Best margins` now open TMX directly when `tmx_url` exists.
 - Recommendation cards currently use a neutral glass row style without the earlier local color highlight tint.
 - Clickable recommendation cards expose a small `Open on TMX` affordance instead of adding a larger CTA.
+- `Close medals` rows now keep difficulty, category, and one muted TMX chip on a single compact chip line when possible.
 - Daily and weekly challenge descriptions are now drawn from stable frontend description pools keyed by card semantic state and `map_uid`, so text does not jump on rerender.
 - Dashboard layering was lightly refined with subtle grouped wrappers for:
   - summary stats;
   - recommendation columns;
   - sync telemetry row.
 - Sync telemetry wording is now compact `sync ... ago`, and the telemetry row lives below the recommendation area instead of higher in the dashboard flow.
+- The desktop split between `Close medals` and `Activity Feed` now uses a `2/5` to `3/5` proportion.
 
 Behavior:
 

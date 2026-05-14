@@ -400,7 +400,7 @@ function DashboardSection({
       ) : (
         <section className={`${dashboardGroupFrameClass} p-3.5 md:p-4`}>
           <div className={dashboardGroupInnerGlowClass} />
-          <div className="relative grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.75fr)]">
+          <div className="relative grid gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
             <SummaryListBlock emptyMessage="No close missing medals right now." items={summary.closest_missing_maps} subtitle="Closest misses by current PB gap" title="Close medals" valueType="gap" />
             <ActivityFeedBlock />
           </div>
@@ -674,6 +674,7 @@ function DashboardChallengeDailyRow({ map }: { map: MapListItem }) {
   const accent = getChallengeAccent(map, "daily");
   const hint = getChallengeHint(map, "daily");
   const externalUrl = getMapExternalUrl(map);
+  const tmxStyleLabel = getTmxPrimaryChipLabel(map.tmx_tag_names, map.tmx_style_name);
 
   return (
     <article className={`group relative overflow-hidden rounded-[20px] border p-3 backdrop-blur-[20px] transition duration-200 hover:-translate-y-0.5 md:p-3.5 ${accent.shell}`}>
@@ -684,9 +685,10 @@ function DashboardChallengeDailyRow({ map }: { map: MapListItem }) {
       <div className="relative grid min-h-[118px] gap-3 xl:grid-cols-[minmax(0,1fr)_auto_auto] xl:items-center">
         <div className="min-w-0 pl-2">
           <div className="app-sidebar-scroll flex min-w-0 flex-nowrap items-center gap-1.5 overflow-x-auto overflow-y-hidden whitespace-nowrap pb-1">
-            <ChallengeChip label={map.category ?? "Unknown"} tone="neutral" compact />
             {map.difficulty_tier ? <DifficultyBadge tier={map.difficulty_tier} /> : null}
             <ChallengeChip label={accent.stageLabel} tone={accent.chipTone} compact />
+            <ChallengeChip label={map.category ?? "Unknown"} tone="neutral" compact truncate />
+            {tmxStyleLabel ? <ChallengeChip label={tmxStyleLabel} tone="tmx" compact truncate /> : null}
           </div>
           <h4 className="mt-1.5 truncate text-[1.08rem] font-black tracking-[-0.04em] text-slate-50">
             {cleanTrackmaniaText(map.name) ?? "Unnamed map"}
@@ -743,6 +745,7 @@ function DashboardChallengeWeeklyCard({ map }: { map: MapListItem }) {
   const accent = getChallengeAccent(map, "weekly");
   const weeklyShellClass = "weeklyShell" in accent ? accent.weeklyShell : accent.shell;
   const externalUrl = getMapExternalUrl(map);
+  const tmxStyleLabel = getTmxPrimaryChipLabel(map.tmx_tag_names, map.tmx_style_name);
 
   return (
     <article className={`group relative flex h-full min-h-[420px] flex-col overflow-hidden rounded-[24px] border p-5 backdrop-blur-[22px] transition duration-200 hover:-translate-y-0.5 md:p-6 ${weeklyShellClass}`}>
@@ -762,9 +765,10 @@ function DashboardChallengeWeeklyCard({ map }: { map: MapListItem }) {
         </div>
 
         <div className="mt-4 flex flex-nowrap items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap">
-          <ChallengeChip label={map.category ?? "Unknown"} tone="neutral" />
           {map.difficulty_tier ? <DifficultyBadge tier={map.difficulty_tier} /> : null}
           <ChallengeChip label={accent.stageLabel} tone={accent.chipTone} />
+          <ChallengeChip label={map.category ?? "Unknown"} tone="neutral" truncate />
+          {tmxStyleLabel ? <ChallengeChip label={tmxStyleLabel} tone="tmx" truncate /> : null}
         </div>
 
         <p className="mt-4 text-sm leading-6 text-sky-100/72">
@@ -905,13 +909,15 @@ function SummaryListBlock({ title, subtitle, items, emptyMessage, valueType }: {
         <div className="grid gap-3">
           {items.map((item) => {
             const externalUrl = item.tmx_url ?? null;
+            const tmxStyleLabel = getTmxPrimaryChipLabel(item.tmx_tag_names, item.tmx_style_name);
             const content = (
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <strong className="block truncate text-base font-bold text-white">{cleanTrackmaniaText(item.name) ?? "Unnamed map"}</strong>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <SmallChip label={item.category ?? "Unknown"} tone={getCategoryTone(item.category)} />
+                  <div className="mt-2 flex min-w-0 flex-nowrap items-center gap-2 overflow-hidden whitespace-nowrap">
                     {item.difficulty_tier ? <DifficultyBadge tier={item.difficulty_tier} /> : null}
+                    <SmallChip label={item.category ?? "Unknown"} tone={getCategoryTone(item.category)} truncate />
+                    {tmxStyleLabel ? <ChallengeChip label={tmxStyleLabel} tone="tmx" compact truncate /> : null}
                   </div>
                 </div>
                 <div className="text-right">
@@ -963,7 +969,15 @@ function ActivityFeedBlock() {
   );
 }
 
-function SmallChip({ label, tone }: { label: string; tone: "success" | "warning" | "danger" | "muted" | "cyan" | "purple" }) {
+function SmallChip({
+  label,
+  tone,
+  truncate = false,
+}: {
+  label: string;
+  tone: "success" | "warning" | "danger" | "muted" | "cyan" | "purple";
+  truncate?: boolean;
+}) {
   const toneClass = {
     success: "border-emerald-300/18 bg-emerald-400/12 text-emerald-100",
     warning: "border-amber-300/18 bg-amber-300/12 text-amber-100",
@@ -972,17 +986,26 @@ function SmallChip({ label, tone }: { label: string; tone: "success" | "warning"
     cyan: "border-cyan-300/18 bg-cyan-400/12 text-cyan-100",
     purple: "border-violet-300/18 bg-violet-400/12 text-violet-100",
   } satisfies Record<string, string>;
-  return <span className={`inline-flex min-h-8 items-center justify-center whitespace-nowrap rounded-full border px-[14px] font-mono text-[11px] font-bold leading-none tracking-[0.2em] ${toneClass[tone]}`}>{label}</span>;
+  return (
+    <span
+      className={`inline-flex ${truncate ? "max-w-[8.5rem]" : ""} min-h-8 items-center justify-center whitespace-nowrap rounded-full border px-[14px] font-mono text-[11px] font-bold leading-none tracking-[0.2em] ${toneClass[tone]}`}
+      title={label}
+    >
+      <span className={truncate ? "block truncate" : undefined}>{label}</span>
+    </span>
+  );
 }
 
 function ChallengeChip({
   label,
   tone,
   compact = false,
+  truncate = false,
 }: {
   label: string;
-  tone: "neutral" | "elite" | "info" | "teal" | "warning" | "success";
+  tone: "neutral" | "elite" | "info" | "teal" | "warning" | "success" | "tmx";
   compact?: boolean;
+  truncate?: boolean;
 }) {
   const toneClass = {
     neutral: "border-white/12 bg-white/[0.05] text-slate-100",
@@ -991,17 +1014,42 @@ function ChallengeChip({
     teal: "border-teal-300/24 bg-teal-300/[0.10] text-teal-100",
     warning: "border-amber-300/26 bg-amber-300/[0.11] text-amber-100",
     success: "border-emerald-300/24 bg-emerald-300/[0.11] text-emerald-100",
+    tmx: "border-sky-200/14 bg-sky-300/[0.07] text-sky-100/78",
   } satisfies Record<string, string>;
 
   return (
     <span
-      className={`inline-flex shrink-0 items-center rounded-full border font-mono font-bold uppercase whitespace-nowrap ${
+      className={`inline-flex ${truncate ? "max-w-[8.5rem]" : "shrink-0"} items-center rounded-full border font-mono font-bold uppercase whitespace-nowrap ${
         compact ? "min-h-7 px-2.5 text-[10px] tracking-[0.16em]" : "min-h-8 px-3 text-[11px] tracking-[0.18em]"
       } ${toneClass[tone]}`}
+      title={label}
     >
-      {label}
+      <span className={truncate ? "block truncate" : undefined}>{label}</span>
     </span>
   );
+}
+
+function normalizeTmxChipLabel(value: string | null | undefined) {
+  if (!value) return null;
+
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  switch (normalized) {
+    case "RPG-Immersive":
+      return "RPG";
+    case "Moving Items":
+      return "Moving";
+    case "No Steering":
+      return "No steer";
+    default:
+      return normalized;
+  }
+}
+
+function getTmxPrimaryChipLabel(tags: string[] | null | undefined, style: string | null | undefined) {
+  const lastTag = tags && tags.length > 0 ? tags[tags.length - 1] : null;
+  return normalizeTmxChipLabel(lastTag) ?? normalizeTmxChipLabel(style);
 }
 
 function ChallengeStatPill({

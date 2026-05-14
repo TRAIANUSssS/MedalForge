@@ -149,6 +149,8 @@ Current dashboard target-card flow:
 - dashboard-only sidebar debug actions communicate with the dashboard through browser `CustomEvent`s instead of a global state library;
 - external challenge links are resolved from backend-returned metadata with priority `tmx_url -> trackmania_io_url -> Trackmania.io leaderboard fallback`;
 - Weekly Challenge thumbnail priority is `tmx_thumbnail_url -> thumbnail_url -> local glass placeholder`.
+- production target cards can render compact chip rows combining semantic status, map category, and one informational TMX chip;
+- that TMX chip currently prefers the last saved `tmx_tag_names` entry and falls back to `tmx_style_name`.
 
 Current page-capture flow:
 
@@ -162,6 +164,8 @@ Current dashboard recommendation-card flow:
 - when a summary row has `tmx_url`, the entire row becomes an external TMX link;
 - recommendation rows currently use one neutral glass style instead of per-section accent tinting;
 - linked rows expose a small `Open on TMX` affordance rather than a larger CTA block.
+- `Close medals` now shares the row with `Activity Feed` in a `2/5` to `3/5` desktop split;
+- `Close medals` rows can render difficulty, category, and one muted informational TMX chip without changing backend contracts.
 
 ## MVP Boundaries
 

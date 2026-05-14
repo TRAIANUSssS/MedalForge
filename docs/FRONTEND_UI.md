@@ -63,6 +63,12 @@ Current characteristics:
 - compact map recommendation cards without campaign/company chips;
 - `CHALLENGE YOURSELF` target block directly under the summary stats grid;
 - three compact daily target rows plus one weekly challenge card;
+- daily and weekly challenge cards now keep compact chip rows with:
+  - semantic status;
+  - map category;
+  - one muted TMX chip when TMX metadata exists.
+- the dashboard TMX chip currently prefers the last saved `tmx_tag_names` entry and falls back to `tmx_style_name`;
+- TMX chip labels stay informational only and use muted cyan/blue styling rather than status colors;
 - subtle grouped wrappers for summary stats, recommendation columns, and bottom sync telemetry;
 - sync telemetry row moved below recommendations and uses compact `sync ... ago` wording;
 - dashboard-local target persistence through `localStorage`;
@@ -73,6 +79,8 @@ Current characteristics:
 - recommendation rows in `Close medals`, `Quick wins`, and `Best margins` now open TMX directly when `tmx_url` is available;
 - those recommendation rows currently use a neutral glass treatment without per-card amber/violet tint accents;
 - clickable recommendation rows expose a small `Open on TMX` affordance instead of adding heavier visual chrome;
+- `Close medals` rows now keep compact one-line chip rows with difficulty, category, and one muted TMX chip when TMX metadata exists;
+- the desktop recommendation/activity split now gives `Close medals` a narrower `2/5` column and `Activity Feed` a wider `3/5` column;
 - daily and weekly challenge descriptions now come from stable description pools instead of a single hardcoded sentence.
 - the old top-right screenshot controls were removed from the page hero area.
 - links users into `Maps` for the full database table and into `Settings` for sync/account actions.
@@ -137,6 +145,7 @@ Current characteristics:
 - contains the current `Priority 1 Target Cards` reference layout;
 - bottom quiet control strip footer shared with the production workspaces;
 - daily target rows use compact one-line chips, compact stat pills, and shared `BEAT NOW` CTA styling;
+- production target cards currently reserve room for semantic status, category, and one informational TMX chip without adding a second chip row;
 - weekly challenge and completion/placeholder states are explored here before dashboard adoption.
 
 ## Reusable UI Building Blocks
