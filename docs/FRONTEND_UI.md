@@ -102,7 +102,20 @@ Current characteristics:
 - fixed desktop sidebar layout consistent with dashboard/settings;
 - bottom quiet control strip footer shared with dashboard/settings/playground;
 - page capture now runs from the shared sidebar `DEBUG` block instead of the page header;
-- filters for category, status, search, sorting, and pagination;
+- collapsible `Browse collections` glass panel with:
+  - category tabs for Seasonal, Grands, Shorts, Track of the Day, and Other;
+  - compact campaign/group cards with progress tinting and active-summary clearing;
+  - year grouping where campaign labels contain a safe year;
+- query-aware filter shell below the collections browser with:
+  - search;
+  - difficulty single-select;
+  - TMX style single-select;
+  - PB presence single-select;
+  - required-position range control;
+  - status chips with counts scoped to the current filtered map pool;
+- custom glass dropdowns instead of native browser `select` menus;
+- header-click sorting on the table, plus top and bottom pagination controls;
+- table rows now show campaign name under map title, category plus one muted TMX/info chip, inline required-position difficulty badge pairing, and a final TMX outbound-link column;
 - semantic row highlighting for earned, close, and not-played states;
 - campaign metadata stays visible here, unlike compact dashboard cards.
 

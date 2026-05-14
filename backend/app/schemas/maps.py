@@ -54,3 +54,21 @@ class MapCategoryMeta(BaseModel):
 class MapsMetaResponse(BaseModel):
     categories: list[MapCategoryMeta]
     status_counts: dict[str, int]
+    difficulty_tiers: list[str]
+    tmx_styles: list[str]
+    position_bounds: dict[str, int]
+
+
+class MapCollectionItem(BaseModel):
+    category: str
+    campaign_name: str
+    total: int
+    earned: int
+    missing: int
+    close: int
+    not_played: int
+    completion_percent: float
+
+
+class MapCollectionsResponse(BaseModel):
+    items: list[MapCollectionItem]

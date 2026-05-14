@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.5 follow-up: dashboard documentation alignment after TMX/category chip polish.
+- Sprint 6.6 follow-up: documentation alignment after the maps collections/catalog workspace expansion.
 
 ## Stage Checklist
 
@@ -35,6 +35,7 @@ Current focus:
 | Sprint 6.3: Challenge target cards | Done | Dashboard `CHALLENGE YOURSELF` block, sidebar reroll actions, localStorage persistence, completion placeholders/celebration state | `/dashboard` shows 3 daily rows + 1 weekly card, reroll works, build passes |
 | Sprint 6.4: TMX map enrichment | Done | Backend TMX sync, stored TMX metadata, dashboard TMX links/thumbs for challenge and recommendation cards, Settings TMX sync action | `POST /api/sync/tmx-map-info`, `/dashboard`, and `npm run build` all pass |
 | Sprint 6.5: Footer polish | Done | Shared quiet control strip on non-landing frontend pages, landing-page exclusion, subtle hierarchy/hover polish | `/dashboard`, `/maps`, `/settings`, `/design-playground`, and `npm run build` |
+| Sprint 6.6: Maps collections workspace | Done | Collection aggregates endpoint, query-aware maps metadata, collection catalog UX, custom dropdowns, richer maps filters and table polish | `/maps`, `GET /api/maps`, `GET /api/maps/meta`, `GET /api/maps/collections`, and `npm run build` |
 
 ## Completed Notes
 
@@ -595,6 +596,89 @@ Manual route checks:
 /maps                footer visible
 /settings            footer visible
 /design-playground   footer visible
+```
+
+### Sprint 6.6: Maps Collections Workspace
+
+Status: Done
+
+Implemented:
+
+- Backend additions:
+  - `GET /api/maps/collections` for collection aggregates used by the `/maps` browse panel;
+  - `GET /api/maps` now accepts:
+    - `campaign_name`
+    - `difficulty_tier`
+    - `tmx_style_name`
+    - `pb_state`
+    - `position_min`
+    - `position_max`
+  - `GET /api/maps/meta` is now query-aware and returns:
+    - scoped `status_counts`
+    - `difficulty_tiers`
+    - `tmx_styles`
+    - `position_bounds`
+- Collection naming rules now use effective campaign/group labels:
+  - Seasonal keeps source campaign names such as `Spring 2026`;
+  - Totd is grouped by month labels such as `July 2020`;
+  - Weekly and Grand maps are grouped as `Week N`.
+- `MapsPage` now includes a collapsible `Browse collections` block with:
+  - category tabs;
+  - compact campaign/group cards;
+  - active collection summary with `Clear`;
+  - repeat-click/toggle behavior for category and campaign filters.
+- The maps filter shell was expanded to include:
+  - search;
+  - difficulty single-select;
+  - TMX style single-select;
+  - PB presence single-select;
+  - required-position min/max range control;
+  - status chips with scoped counts;
+  - right-aligned `Search` and `Reset`.
+- Native browser `select` controls were replaced with custom glass dropdown components.
+- The maps table was polished with:
+  - header-click sorting;
+  - top and bottom pagination;
+  - campaign name displayed under map title;
+  - category plus one muted TMX/info chip in the category column;
+  - inline required-position + difficulty row;
+  - final TMX outbound-link column;
+  - tighter row density.
+- The page background on `/maps` was decoupled from table height using viewport-level atmospheric layers so filtering no longer changes the backdrop shape.
+
+Verification:
+
+```powershell
+cd backend
+python -m compileall app
+```
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe - <<'PY'
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+print(client.get("/api/maps/collections").json()["items"][:1])
+print(client.get("/api/maps/meta", params={"category": "Seasonal", "campaign_name": "Spring 2026"}).json()["status_counts"])
+print(client.get("/api/maps", params={"category": "Seasonal", "campaign_name": "Spring 2026", "limit": 2}).json()["total"])
+PY
+```
+
+```powershell
+cd frontend
+npm run build
+```
+
+Manual checks:
+
+```text
+/maps
+- open Browse collections and confirm category/campaign selection filters the table
+- click an active category or campaign again and confirm only that collection filter clears
+- verify Search/Reset, status chips, TMX style, PB state, difficulty, and required-position filters all coexist
+- verify header sorting, TMX link column, and top pagination
 ```
 
 ### Sprint 6.1: Frontend Visual Foundation

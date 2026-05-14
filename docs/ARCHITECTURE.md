@@ -47,6 +47,7 @@ Current routes:
 - `POST /api/auth/trackmania/disconnect`
 - `GET /api/maps`
 - `GET /api/maps/meta`
+- `GET /api/maps/collections`
 - `GET /api/stats/summary`
 
 Planned route groups:
@@ -128,7 +129,7 @@ Current frontend UI split:
 - `ProgressEntryPage` is intentionally minimal and atmospheric, with one central progress artifact.
 - `DashboardPage` is the main backend-driven overview surface and now includes a frontend-generated
   `CHALLENGE YOURSELF` block backed by existing `/api/maps` data.
-- `MapsPage` owns the full maps table, filters, sorting, and pagination.
+- `MapsPage` owns the full maps table, collections browser, filters, sorting, and pagination.
 - `SettingsPage` owns sync controls, Trackmania OAuth state, and latest sync-job visibility.
 - `DesignPlaygroundPage` stays mock-only and is used to refine the visual language before promoting ideas into production pages.
 
@@ -142,6 +143,7 @@ Current production workspace layout:
 Current dashboard target-card flow:
 
 - the dashboard fetches maps through the existing `GET /api/maps` endpoint;
+- the maps workspace uses `GET /api/maps`, query-aware `GET /api/maps/meta`, and `GET /api/maps/collections`;
 - target-card selection is frontend-only and does not have a dedicated backend endpoint yet;
 - standard reroll selects normal missing/not-earned targets;
 - edge-case reroll can intentionally generate `0-3` real targets to test late-progress states;

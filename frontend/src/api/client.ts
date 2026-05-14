@@ -74,6 +74,24 @@ export type MapsResponse = {
 export type MapsMetaResponse = {
   categories: Array<{ name: string; count: number }>;
   status_counts: Record<string, number>;
+  difficulty_tiers: string[];
+  tmx_styles: string[];
+  position_bounds: { min: number; max: number };
+};
+
+export type MapCollectionItem = {
+  category: string;
+  campaign_name: string;
+  total: number;
+  earned: number;
+  missing: number;
+  close: number;
+  not_played: number;
+  completion_percent: number;
+};
+
+export type MapCollectionsResponse = {
+  items: MapCollectionItem[];
 };
 
 export type SyncJobResponse = {
@@ -217,7 +235,13 @@ export async function disconnectTrackmaniaAuth(): Promise<{ status: string }> {
 export async function getMaps(params: {
   status?: string;
   category?: string;
+  campaign_name?: string;
   search?: string;
+  difficulty_tier?: string;
+  tmx_style_name?: string;
+  pb_state?: "any" | "has_pb" | "no_pb";
+  position_min?: number;
+  position_max?: number;
   sort?: string;
   order?: "asc" | "desc";
   limit?: number;
@@ -226,7 +250,13 @@ export async function getMaps(params: {
   const query = new URLSearchParams();
   if (params.status && params.status !== "all") query.set("status", params.status);
   if (params.category) query.set("category", params.category);
+  if (params.campaign_name) query.set("campaign_name", params.campaign_name);
   if (params.search) query.set("search", params.search);
+  if (params.difficulty_tier) query.set("difficulty_tier", params.difficulty_tier);
+  if (params.tmx_style_name) query.set("tmx_style_name", params.tmx_style_name);
+  if (params.pb_state && params.pb_state !== "any") query.set("pb_state", params.pb_state);
+  if (params.position_min !== undefined) query.set("position_min", String(params.position_min));
+  if (params.position_max !== undefined) query.set("position_max", String(params.position_max));
   if (params.sort) query.set("sort", params.sort);
   if (params.order) query.set("order", params.order);
   query.set("limit", String(params.limit ?? 50));
@@ -235,8 +265,31 @@ export async function getMaps(params: {
   return request<MapsResponse>(`/api/maps?${query.toString()}`);
 }
 
-export async function getMapsMeta(): Promise<MapsMetaResponse> {
-  return request<MapsMetaResponse>("/api/maps/meta");
+export async function getMapsMeta(params: {
+  category?: string;
+  campaign_name?: string;
+  search?: string;
+  difficulty_tier?: string;
+  tmx_style_name?: string;
+  pb_state?: "any" | "has_pb" | "no_pb";
+  position_min?: number;
+  position_max?: number;
+} = {}): Promise<MapsMetaResponse> {
+  const query = new URLSearchParams();
+  if (params.category) query.set("category", params.category);
+  if (params.campaign_name) query.set("campaign_name", params.campaign_name);
+  if (params.search) query.set("search", params.search);
+  if (params.difficulty_tier) query.set("difficulty_tier", params.difficulty_tier);
+  if (params.tmx_style_name) query.set("tmx_style_name", params.tmx_style_name);
+  if (params.pb_state && params.pb_state !== "any") query.set("pb_state", params.pb_state);
+  if (params.position_min !== undefined) query.set("position_min", String(params.position_min));
+  if (params.position_max !== undefined) query.set("position_max", String(params.position_max));
+  const suffix = query.toString() ? `?${query.toString()}` : "";
+  return request<MapsMetaResponse>(`/api/maps/meta${suffix}`);
+}
+
+export async function getMapCollections(): Promise<MapCollectionsResponse> {
+  return request<MapCollectionsResponse>("/api/maps/collections");
 }
 
 export async function getStatsSummary(): Promise<StatsSummaryResponse> {

@@ -29,6 +29,13 @@ Current delivered state:
   - `/maps`
   - `/settings`
   - `/design-playground`
+- Enhanced Maps workspace:
+  - collapsible `Browse collections` catalog for Warrior categories and campaigns
+  - campaign-aware filtering through `GET /api/maps?campaign_name=...`
+  - query-aware `GET /api/maps/meta` counts and filter metadata
+  - `GET /api/maps/collections` aggregates for collection progress
+  - TMX style, PB-presence, difficulty, and required-position filters
+  - clickable table-header sorting and TMX outbound links
 - Shared quiet control strip footer:
   - visible on `/dashboard`, `/maps`, `/settings`, and `/design-playground`
   - hidden on `/` so the landing hero stays centered

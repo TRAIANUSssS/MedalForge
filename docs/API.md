@@ -54,8 +54,14 @@ Query params:
 ```text
 status=all|earned|missing|close|not_played
 category=...
+campaign_name=...
 search=...
-sort=name|warrior_time_ms|author_time_ms|category|campaign_name|created_at|updated_at
+difficulty_tier=Free|Easy|Normal|Hard|Insane|Demon
+tmx_style_name=...
+pb_state=any|has_pb|no_pb
+position_min=1..10000
+position_max=1..10000
+sort=name|category|warrior_time_ms|author_time_ms|world_record_time_ms|required_position|pb_time_ms
 order=asc|desc
 limit=100 (current backend validation allows up to 10000)
 offset=0
@@ -88,9 +94,30 @@ Map items now include TMX enrichment fields when available:
 }
 ```
 
+Notes:
+
+- `campaign_name` is an effective campaign/group label, not just the raw stored column value:
+  - Seasonal keeps source campaign names such as `Spring 2026`;
+  - Totd is grouped into month collections such as `July 2020`;
+  - Weekly and Grand maps are grouped into `Week N`.
+- Frontend currently uses `limit=50` for the main table.
+
 ### GET /api/maps/meta
 
-Returns metadata for maps table filters.
+Returns metadata for maps table filters and status counts for the current query scope.
+
+Query params:
+
+```text
+category=...
+campaign_name=...
+search=...
+difficulty_tier=Free|Easy|Normal|Hard|Insane|Demon
+tmx_style_name=...
+pb_state=any|has_pb|no_pb
+position_min=1..10000
+position_max=1..10000
+```
 
 Response:
 
@@ -108,9 +135,50 @@ Response:
     "missing": 0,
     "close": 0,
     "not_played": 4559
+  },
+  "difficulty_tiers": ["Demon", "Insane", "Hard", "Normal"],
+  "tmx_styles": ["Mini", "Race", "LOL"],
+  "position_bounds": {
+    "min": 1,
+    "max": 10000
   }
 }
 ```
+
+Notes:
+
+- `status_counts` are query-aware and reflect the currently filtered map pool.
+- `categories`, `difficulty_tiers`, and `tmx_styles` are also derived from the filtered scope.
+
+### GET /api/maps/collections
+
+Returns aggregated collection progress for the `Browse collections` panel on `/maps`.
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "category": "Seasonal",
+      "campaign_name": "Spring 2026",
+      "total": 25,
+      "earned": 6,
+      "missing": 16,
+      "close": 5,
+      "not_played": 3,
+      "completion_percent": 24.0
+    }
+  ]
+}
+```
+
+Notes:
+
+- endpoint is read-only and uses existing SQLite data only;
+- Totd collections are month-based, e.g. `April 2021`;
+- Weekly and Grand collections are grouped as `Week N`;
+- frontend groups these returned collections by year where the year can be extracted safely.
 
 ### POST /api/sync/warrior-positions
 
