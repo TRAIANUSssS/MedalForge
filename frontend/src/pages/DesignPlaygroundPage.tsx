@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 
+import { SiteFooter } from "../components/layout/SiteFooter";
 import { ActivityFeedItem } from "../components/playground/ActivityFeedItem";
 import { DesignSection } from "../components/playground/DesignSection";
 import { DifficultyBadge } from "../components/playground/DifficultyBadge";
@@ -515,6 +516,7 @@ export function DesignPlaygroundPage({ onNavigate }: { onNavigate: (path: string
             </DesignSection>
           </main>
         </div>
+        <SiteFooter className="mt-6" />
       </div>
     </div>
   );

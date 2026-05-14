@@ -59,6 +59,11 @@ Useful frontend routes during local work:
 /playground         Alias route for the design sandbox
 ```
 
+Footer behavior:
+
+- `/` intentionally has no footer so the landing hero stays centered
+- `/dashboard`, `/maps`, `/settings`, and `/design-playground` use the shared quiet control strip footer
+
 ## Verification
 
 Backend import, DB creation, and health endpoint:

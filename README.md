@@ -29,6 +29,11 @@ Current delivered state:
   - `/maps`
   - `/settings`
   - `/design-playground`
+- Shared quiet control strip footer:
+  - visible on `/dashboard`, `/maps`, `/settings`, and `/design-playground`
+  - hidden on `/` so the landing hero stays centered
+  - left side emphasizes MedalForge navigation and repository credit
+  - right side keeps TM WARRIOR MEDALS attribution secondary
 - Dashboard `CHALLENGE YOURSELF` block:
   - 3 compact daily target rows
   - 1 weekly challenge card

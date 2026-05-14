@@ -37,6 +37,7 @@ Current characteristics:
 - minimal hero composition;
 - animated count-up for earned, total, and percentage;
 - reusable `WarriorProgressBar` hero component;
+- intentionally has no footer, so the hero stays centered and singular;
 - warm energy edge treatment reserved for global Warrior completion only.
 
 ### Dashboard Page
@@ -55,6 +56,7 @@ Purpose:
 Current characteristics:
 
 - fixed desktop sidebar layout shared with the other production workspaces;
+- bottom quiet control strip footer shared with maps/settings/playground;
 - hero overall progress bar plus compact sticky progress inside the sidebar;
 - sidebar now includes a compact `DEBUG` block instead of the older `TARGETS` explainer card;
 - the shared debug block owns page-aware `Save full-page PNG` capture actions for production pages;
@@ -90,6 +92,7 @@ Purpose:
 Current characteristics:
 
 - fixed desktop sidebar layout consistent with dashboard/settings;
+- bottom quiet control strip footer shared with dashboard/settings/playground;
 - page capture now runs from the shared sidebar `DEBUG` block instead of the page header;
 - filters for category, status, search, sorting, and pagination;
 - semantic row highlighting for earned, close, and not-played states;
@@ -109,6 +112,7 @@ Purpose:
 Current characteristics:
 
 - fixed desktop sidebar layout consistent with dashboard/maps;
+- bottom quiet control strip footer shared with dashboard/maps/playground;
 - `Backend {version}` badge is intentionally shown in the hero area only on Settings;
 - page capture now runs from the shared sidebar `DEBUG` block instead of the page header;
 - sync control cards for Warrior data, positions, PB sync, and TMX metadata sync;
@@ -131,6 +135,7 @@ Purpose:
 Current characteristics:
 
 - contains the current `Priority 1 Target Cards` reference layout;
+- bottom quiet control strip footer shared with the production workspaces;
 - daily target rows use compact one-line chips, compact stat pills, and shared `BEAT NOW` CTA styling;
 - weekly challenge and completion/placeholder states are explored here before dashboard adoption.
 
@@ -158,6 +163,33 @@ Important constraint:
 
 - the warm flame/heat treatment is intentionally not a generic progress style for all bars in the app.
 
+### SiteFooter
+
+File:
+
+- `frontend/src/components/layout/SiteFooter.tsx`
+
+Purpose:
+
+- shared quiet control strip for non-landing frontend pages;
+- keep project attribution and outbound links visible without expanding into a large footer.
+
+Current behavior:
+
+- rendered on `/dashboard`, `/maps`, `/settings`, and `/design-playground`;
+- intentionally hidden on `/`;
+- compact glass strip with softer chrome than the main content cards;
+- left side is primary:
+  - `MedalForge` routes to `/`;
+  - `TRAIANUSssS` links to the GitHub profile;
+  - `GitHub` links to the MedalForge repository.
+- right side is secondary:
+  - `GitHub` links to the TM Warrior Medals repository;
+  - `ezio416` links to the GitHub profile;
+  - `TM WARRIOR MEDALS` links to the Openplanet plugin page.
+- separators use muted cyan bullets;
+- links use subtle cyan/blue hover polish without strong glow or heavy underline.
+
 ## Visual Direction
 
 The current frontend visual language is intentionally:
@@ -176,6 +208,7 @@ Key rules that now exist in code:
 - `MapsPage` owns the full maps database workflow.
 - `SettingsPage` owns sync/account actions and detailed sync status.
 - `DesignPlaygroundPage` remains the safe place to test future surface, typography, and interaction ideas before production adoption.
+- `SiteFooter` should stay compact, quiet, and attribution-focused rather than becoming a marketing or SaaS footer.
 
 ## Styling Notes
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { getMaps, getMapsMeta, getStatsSummary, type MapListItem, type MapsMetaResponse, type StatsSummaryResponse } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
+import { SiteFooter } from "../components/layout/SiteFooter";
 import { DifficultyBadge } from "../components/playground/DifficultyBadge";
 import { capturePageAsPng } from "../utils/pageCapture";
 
@@ -281,6 +282,7 @@ export function MapsPage({ onNavigate }: { onNavigate: (path: string) => void })
                 />
               </div>
             </section>
+            <SiteFooter />
         </main>
       </div>
     </div>

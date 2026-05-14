@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.4: TMX enrichment, dashboard external-link polish, and Settings TMX sync controls.
+- Sprint 6.5: shared frontend footer polish and documentation alignment.
 
 ## Stage Checklist
 
@@ -34,6 +34,7 @@ Current focus:
 | Sprint 6.2: Workspace split and dashboard polish | Done | Separate `Maps` and `Settings` workspaces, fixed shared sidebar, compact sticky progress, dashboard visual polish | `/dashboard`, `/maps`, `/settings` open correctly and `npm run build` passes |
 | Sprint 6.3: Challenge target cards | Done | Dashboard `CHALLENGE YOURSELF` block, sidebar reroll actions, localStorage persistence, completion placeholders/celebration state | `/dashboard` shows 3 daily rows + 1 weekly card, reroll works, build passes |
 | Sprint 6.4: TMX map enrichment | Done | Backend TMX sync, stored TMX metadata, dashboard TMX links/thumbs for challenge and recommendation cards, Settings TMX sync action | `POST /api/sync/tmx-map-info`, `/dashboard`, and `npm run build` all pass |
+| Sprint 6.5: Footer polish | Done | Shared quiet control strip on non-landing frontend pages, landing-page exclusion, subtle hierarchy/hover polish | `/dashboard`, `/maps`, `/settings`, `/design-playground`, and `npm run build` |
 
 ## Completed Notes
 
@@ -544,6 +545,49 @@ PY
 cd frontend
 npm run build
 ```
+
+### Sprint 6.5: Shared Footer Polish
+
+Status: Done
+
+Implemented:
+
+- `frontend/src/components/layout/SiteFooter.tsx` as a shared quiet control strip.
+- Footer is rendered on:
+  - `/dashboard`
+  - `/maps`
+  - `/settings`
+  - `/design-playground`
+- Footer is intentionally not rendered on `/` so the progress-entry hero remains centered and composition-first.
+- Left side behavior:
+  - `MedalForge` routes back to `/`;
+  - `TRAIANUSssS` links to the GitHub profile;
+  - `GitHub` links to the MedalForge repository.
+- Right side behavior:
+  - `GitHub` links to the TM Warrior Medals repository;
+  - `ezio416` links to the GitHub profile;
+  - `TM WARRIOR MEDALS` links to the Openplanet plugin page.
+- Visual polish:
+  - softer separators;
+  - subtle cyan/blue hover states;
+  - reduced capsule feel;
+  - light inner highlight instead of stronger glow.
+
+Verification:
+
+```powershell
+cd frontend
+npm run build
+```
+
+Manual route checks:
+
+```text
+/                    no footer, centered progress-entry hero
+/dashboard           footer visible
+/maps                footer visible
+/settings            footer visible
+/design-playground   footer visible
 ```
 
 ### Sprint 6.1: Frontend Visual Foundation

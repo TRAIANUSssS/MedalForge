@@ -61,6 +61,7 @@ export function ProgressEntryPage({ onNavigate }: { onNavigate: (path: string) =
             </div>
           </div>
         </section>
+
       </div>
     </div>
   );

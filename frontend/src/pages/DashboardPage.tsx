@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { getMaps, getStatsSummary, type LatestSyncJobSummary, type MapListItem, type StatsSummaryResponse, type SummaryMapItem } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
+import { SiteFooter } from "../components/layout/SiteFooter";
 import { ActivityFeedItem } from "../components/playground/ActivityFeedItem";
 import { DifficultyBadge } from "../components/playground/DifficultyBadge";
 import { WarriorProgressBar } from "../components/progress/WarriorProgressBar";
@@ -276,6 +277,7 @@ export function DashboardPage({ onNavigate }: { onNavigate: (path: string) => vo
             }}
             stats={stats}
           />
+          <SiteFooter />
         </main>
       </div>
     </div>

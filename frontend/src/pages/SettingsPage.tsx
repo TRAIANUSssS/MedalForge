@@ -21,6 +21,7 @@ import {
   type WarriorSyncResponse,
 } from "../api/client";
 import { AppSidebar } from "../components/layout/AppSidebar";
+import { SiteFooter } from "../components/layout/SiteFooter";
 import { capturePageAsPng } from "../utils/pageCapture";
 
 type HealthState =
@@ -375,6 +376,7 @@ export function SettingsPage({ onNavigate }: { onNavigate: (path: string) => voi
               sync={sync}
               tmxSync={tmxSync}
             />
+            <SiteFooter />
         </main>
       </div>
     </div>
