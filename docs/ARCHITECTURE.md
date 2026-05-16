@@ -110,6 +110,7 @@ Current frontend is a shell with:
 - history-based route resolution in `frontend/src/app/App.tsx`;
 - production entry screen at `/`;
 - dashboard page at `/dashboard`;
+- stats workspace at `/stats`;
 - maps workspace at `/maps`;
 - settings workspace at `/settings`;
 - design sandbox at `/design-playground` and `/playground`;
@@ -119,6 +120,7 @@ Current frontend route model:
 
 - `/` -> `ProgressEntryPage`
 - `/dashboard` -> `DashboardPage`
+- `/stats` -> `StatsPage`
 - `/maps` -> `MapsPage`
 - `/settings` -> `SettingsPage`
 - `/design-playground` -> `DesignPlaygroundPage`
@@ -129,6 +131,8 @@ Current frontend UI split:
 - `ProgressEntryPage` is intentionally minimal and atmospheric, with one central progress artifact.
 - `DashboardPage` is the main backend-driven overview surface and now includes a frontend-generated
   `CHALLENGE YOURSELF` block backed by existing `/api/maps` data.
+- `StatsPage` is a dedicated breakdown workspace powered by the same `GET /api/stats/summary` payload,
+  with top stats cards, difficulty/category breakdowns, close funnel visibility, and top-list ranking blocks.
 - `MapsPage` owns the full maps table, collections browser, filters, sorting, and pagination.
 - `SettingsPage` owns sync controls, Trackmania OAuth state, and latest sync-job visibility.
 - `DesignPlaygroundPage` stays mock-only and is used to refine the visual language before promoting ideas into production pages.
@@ -163,6 +167,7 @@ Current page-capture flow:
 Current dashboard recommendation-card flow:
 
 - `Close medals`, `Quick wins`, and `Best margins` use the backend summary payload from `GET /api/stats/summary`;
+- `StatsPage` also consumes `GET /api/stats/summary`, including the expanded breakdown and ranking fields added for Sprint 7;
 - when a summary row has `tmx_url`, the entire row becomes an external TMX link;
 - recommendation rows currently use one neutral glass style instead of per-section accent tinting;
 - linked rows expose a small `Open on TMX` affordance rather than a larger CTA block.

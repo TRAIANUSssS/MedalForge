@@ -15,6 +15,10 @@ from app.models.warrior_map import WarriorMap
 from app.services.difficulty import difficulty_tier_from_position
 
 
+DIFFICULTY_ORDER = ["Free", "Easy", "Normal", "Hard", "Insane", "Demon"]
+CATEGORY_ORDER = ["Seasonal", "Grand", "Weekly", "Totd", "Other"]
+
+
 def resolve_primary_account_id(db: Session) -> str | None:
     token_account_id = db.scalar(
         select(AuthToken.provider_account_id)
@@ -132,6 +136,11 @@ def list_best_margin_maps(db: Session, *, account_id: str | None, limit: int = 6
     return [_summary_row_to_dict(row) for row in db.execute(statement).all()]
 
 
+def list_all_maps_with_stats(db: Session, *, account_id: str | None) -> list[dict]:
+    statement = _all_maps_with_stats_statement(account_id=account_id)
+    return [_all_maps_row_to_dict(row) for row in db.execute(statement).all()]
+
+
 def get_latest_progress_snapshot(db: Session, *, account_id: str | None) -> ProgressSnapshot | None:
     statement = select(ProgressSnapshot)
     if account_id:
@@ -144,32 +153,18 @@ def get_latest_sync_job_for_type(db: Session, *, job_type: str) -> SyncJob | Non
 
 
 def _summary_maps_statement(*, account_id: str | None) -> Select:
-    warrior_position = (
-        select(
-            MapPosition.map_uid.label("map_uid"),
-            func.max(
-                case(
-                    (MapPosition.position_status == "over_10000", 10_000),
-                    else_=MapPosition.world_position,
-                )
-            ).label("required_position"),
-            func.max(MapPosition.position_status).label("position_status"),
-            func.max(
-                case(
-                    (MapPosition.position_status == "over_10000", 10001),
-                    else_=func.coalesce(MapPosition.world_position, 0),
-                )
-            ).label("quick_win_rank"),
-        )
-        .where(MapPosition.position_type == "warrior")
-        .group_by(MapPosition.map_uid)
-        .subquery()
-    )
+    warrior_position = _warrior_position_subquery()
+
+    join_condition = PlayerRecord.map_uid == WarriorMap.map_uid
+    if account_id:
+        join_condition = join_condition & (PlayerRecord.account_id == account_id)
 
     statement = (
         select(
             WarriorMap.map_uid,
             WarriorMap.map_id,
+            WarriorMap.trackmania_io_url,
+            WarriorMap.thumbnail_url,
             WarriorMap.tmx_track_id,
             WarriorMap.tmx_url,
             WarriorMap.tmx_thumbnail_url,
@@ -198,27 +193,93 @@ def _summary_maps_statement(*, account_id: str | None) -> Select:
     return statement
 
 
+def _all_maps_with_stats_statement(*, account_id: str | None) -> Select:
+    warrior_position = _warrior_position_subquery()
+    join_condition = PlayerRecord.map_uid == WarriorMap.map_uid
+    if account_id:
+        join_condition = join_condition & (PlayerRecord.account_id == account_id)
+
+    statement = (
+        select(
+            WarriorMap.map_uid,
+            WarriorMap.map_id,
+            WarriorMap.trackmania_io_url,
+            WarriorMap.thumbnail_url,
+            WarriorMap.tmx_track_id,
+            WarriorMap.tmx_url,
+            WarriorMap.tmx_thumbnail_url,
+            WarriorMap.tmx_tag_names_json,
+            WarriorMap.tmx_difficulty_name,
+            WarriorMap.tmx_route_name,
+            WarriorMap.tmx_length_name,
+            WarriorMap.tmx_style_name,
+            WarriorMap.tmx_type_name,
+            WarriorMap.name,
+            WarriorMap.author_name,
+            WarriorMap.category,
+            WarriorMap.campaign_name,
+            WarriorMap.warrior_time_ms,
+            PlayerRecord.pb_time_ms,
+            PlayerRecord.diff_to_warrior_ms,
+            PlayerRecord.has_warrior,
+            warrior_position.c.required_position,
+            warrior_position.c.position_status,
+            warrior_position.c.quick_win_rank,
+        )
+        .select_from(WarriorMap)
+        .outerjoin(PlayerRecord, join_condition)
+        .outerjoin(warrior_position, warrior_position.c.map_uid == WarriorMap.map_uid)
+    )
+    return statement
+
+
+def _warrior_position_subquery():
+    warrior_position = (
+        select(
+            MapPosition.map_uid.label("map_uid"),
+            func.max(
+                case(
+                    (MapPosition.position_status == "over_10000", 10_000),
+                    else_=MapPosition.world_position,
+                )
+            ).label("required_position"),
+            func.max(MapPosition.position_status).label("position_status"),
+            func.max(
+                case(
+                    (MapPosition.position_status == "over_10000", 10001),
+                    else_=func.coalesce(MapPosition.world_position, 0),
+                )
+            ).label("quick_win_rank"),
+        )
+        .where(MapPosition.position_type == "warrior")
+        .group_by(MapPosition.map_uid)
+        .subquery()
+    )
+    return warrior_position
+
 def _summary_row_to_dict(row: Sequence[object]) -> dict:
     map_uid = row[0]
     map_id = row[1]
-    tmx_track_id = row[2]
-    tmx_url = row[3]
-    tmx_thumbnail_url = row[4]
-    tmx_tag_names_json = row[5]
-    tmx_difficulty_name = row[6]
-    tmx_route_name = row[7]
-    tmx_length_name = row[8]
-    tmx_style_name = row[9]
-    tmx_type_name = row[10]
-    name = row[11]
-    author_name = row[12]
-    category = row[13]
-    campaign_name = row[14]
-    warrior_time_ms = row[15]
-    pb_time_ms = row[16]
-    diff_to_warrior_ms = row[17]
-    required_position = row[18]
-    position_status = row[19]
+    trackmania_io_url = row[2]
+    thumbnail_url = row[3]
+    tmx_track_id = row[4]
+    tmx_url = row[5]
+    tmx_thumbnail_url = row[6]
+    tmx_tag_names_json = row[7]
+    tmx_difficulty_name = row[8]
+    tmx_route_name = row[9]
+    tmx_length_name = row[10]
+    tmx_style_name = row[11]
+    tmx_type_name = row[12]
+    name = row[13]
+    author_name = row[14]
+    category = row[15]
+    campaign_name = row[16]
+    warrior_time_ms = row[17]
+    pb_time_ms = row[18]
+    diff_to_warrior_ms = row[19]
+    required_position = row[20]
+    position_status = row[21]
 
     margin_vs_warrior_ms = None
     if diff_to_warrior_ms is not None:
@@ -227,6 +288,8 @@ def _summary_row_to_dict(row: Sequence[object]) -> dict:
     return {
         "map_uid": map_uid,
         "map_id": map_id,
+        "trackmania_io_url": trackmania_io_url,
+        "thumbnail_url": thumbnail_url,
         "tmx_track_id": tmx_track_id,
         "tmx_url": tmx_url,
         "tmx_thumbnail_url": tmx_thumbnail_url,
@@ -248,6 +311,19 @@ def _summary_row_to_dict(row: Sequence[object]) -> dict:
         "position_status": position_status,
         "difficulty_tier": difficulty_tier_from_position(required_position),
     }
+
+
+def _all_maps_row_to_dict(row: Sequence[object]) -> dict:
+    summary = _summary_row_to_dict([*row[:20], row[21], row[22]])
+    has_warrior = row[20]
+    summary["has_warrior"] = bool(has_warrior) if has_warrior is not None else False
+    summary["is_played"] = summary["pb_time_ms"] is not None
+    summary["close_counted"] = (
+        summary["diff_to_warrior_ms"] is not None
+        and summary["diff_to_warrior_ms"] > 0
+        and summary["diff_to_warrior_ms"] <= 2000
+    )
+    return summary
 
 
 def _parse_json_array(value: str | None) -> list[str] | None:

@@ -111,6 +111,8 @@ export type SyncJobResponse = {
 export type SummaryMapItem = {
   map_uid: string;
   map_id: string | null;
+  trackmania_io_url?: string | null;
+  thumbnail_url?: string | null;
   tmx_track_id?: number | null;
   tmx_url?: string | null;
   tmx_thumbnail_url?: string | null;
@@ -131,6 +133,25 @@ export type SummaryMapItem = {
   required_position: number | null;
   position_status: string | null;
   difficulty_tier: string | null;
+};
+
+export type DifficultyBreakdownItem = {
+  tier: string;
+  total: number;
+  earned: number;
+  missing: number;
+  not_played: number;
+  completion_percent: number;
+};
+
+export type CategoryBreakdownItem = {
+  category: string;
+  total: number;
+  earned: number;
+  missing: number;
+  not_played: number;
+  close_count: number;
+  completion_percent: number;
 };
 
 export type LatestSyncJobSummary = {
@@ -160,9 +181,14 @@ export type StatsSummaryResponse = {
   close_200_count: number;
   avg_diff_missing_ms: number | null;
   avg_margin_earned_ms: number | null;
+  earned_by_difficulty: DifficultyBreakdownItem[];
+  earned_by_category: CategoryBreakdownItem[];
   closest_missing_maps: SummaryMapItem[];
+  easiest_missing_maps: SummaryMapItem[];
   quick_wins: SummaryMapItem[];
+  best_earned_maps: SummaryMapItem[];
   best_margin_maps: SummaryMapItem[];
+  hardest_earned_maps: SummaryMapItem[];
   latest_progress_snapshot: {
     account_id: string;
     total_maps: number;

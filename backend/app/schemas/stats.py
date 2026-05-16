@@ -6,6 +6,8 @@ from pydantic import BaseModel
 class SummaryMapItem(BaseModel):
     map_uid: str
     map_id: str | None = None
+    trackmania_io_url: str | None = None
+    thumbnail_url: str | None = None
     tmx_track_id: int | None = None
     tmx_url: str | None = None
     tmx_thumbnail_url: str | None = None
@@ -26,6 +28,25 @@ class SummaryMapItem(BaseModel):
     required_position: int | None = None
     position_status: str | None = None
     difficulty_tier: str | None = None
+
+
+class DifficultyBreakdownItem(BaseModel):
+    tier: str
+    total: int
+    earned: int
+    missing: int
+    not_played: int
+    completion_percent: float
+
+
+class CategoryBreakdownItem(BaseModel):
+    category: str
+    total: int
+    earned: int
+    missing: int
+    not_played: int
+    close_count: int
+    completion_percent: float
 
 
 class ProgressSnapshotSummary(BaseModel):
@@ -78,8 +99,13 @@ class StatsSummaryResponse(BaseModel):
     close_200_count: int
     avg_diff_missing_ms: float | None = None
     avg_margin_earned_ms: float | None = None
+    earned_by_difficulty: list[DifficultyBreakdownItem]
+    earned_by_category: list[CategoryBreakdownItem]
     closest_missing_maps: list[SummaryMapItem]
+    easiest_missing_maps: list[SummaryMapItem]
     quick_wins: list[SummaryMapItem]
+    best_earned_maps: list[SummaryMapItem]
     best_margin_maps: list[SummaryMapItem]
+    hardest_earned_maps: list[SummaryMapItem]
     latest_progress_snapshot: ProgressSnapshotSummary | None = None
     latest_sync_jobs: LatestSyncJobsSummary

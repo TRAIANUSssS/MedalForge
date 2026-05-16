@@ -1,7 +1,7 @@
 const navItems: Array<{ label: string; route?: string; badge?: string }> = [
   { label: "Dashboard", route: "/dashboard" },
   { label: "Maps", route: "/maps" },
-  { label: "Stats" },
+  { label: "Stats", route: "/stats" },
   { label: "Charts" },
   { label: "Grind Queue", badge: "Soon" },
   { label: "Settings", route: "/settings" },

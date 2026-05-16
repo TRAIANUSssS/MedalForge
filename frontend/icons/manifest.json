@@ -1,0 +1,50 @@
+[
+  {
+    "source": "avg earned diff.png",
+    "svg": "avg-earned-diff.svg",
+    "contours": 3,
+    "points": 268
+  },
+  {
+    "source": "avg missing diff.png",
+    "svg": "avg-missing-diff.svg",
+    "contours": 8,
+    "points": 268
+  },
+  {
+    "source": "completion.png",
+    "svg": "completion.svg",
+    "contours": 6,
+    "points": 237
+  },
+  {
+    "source": "earned.png",
+    "svg": "earned.svg",
+    "contours": 1,
+    "points": 24
+  },
+  {
+    "source": "missing.png",
+    "svg": "missing.svg",
+    "contours": 3,
+    "points": 229
+  },
+  {
+    "source": "not played.png",
+    "svg": "not-played.svg",
+    "contours": 1,
+    "points": 39
+  },
+  {
+    "source": "pb coverage.png",
+    "svg": "pb-coverage.svg",
+    "contours": 6,
+    "points": 152
+  },
+  {
+    "source": "total maps.png",
+    "svg": "total-maps.svg",
+    "contours": 1,
+    "points": 51
+  }
+]

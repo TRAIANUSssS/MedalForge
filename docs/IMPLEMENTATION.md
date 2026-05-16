@@ -17,7 +17,7 @@ Goal:
 
 Current focus:
 
-- Sprint 6.6 follow-up: documentation alignment after the maps collections/catalog workspace expansion.
+- Sprint 7 follow-up: documentation alignment after the Stats workspace delivery.
 
 ## Stage Checklist
 
@@ -36,6 +36,7 @@ Current focus:
 | Sprint 6.4: TMX map enrichment | Done | Backend TMX sync, stored TMX metadata, dashboard TMX links/thumbs for challenge and recommendation cards, Settings TMX sync action | `POST /api/sync/tmx-map-info`, `/dashboard`, and `npm run build` all pass |
 | Sprint 6.5: Footer polish | Done | Shared quiet control strip on non-landing frontend pages, landing-page exclusion, subtle hierarchy/hover polish | `/dashboard`, `/maps`, `/settings`, `/design-playground`, and `npm run build` |
 | Sprint 6.6: Maps collections workspace | Done | Collection aggregates endpoint, query-aware maps metadata, collection catalog UX, custom dropdowns, richer maps filters and table polish | `/maps`, `GET /api/maps`, `GET /api/maps/meta`, `GET /api/maps/collections`, and `npm run build` |
+| Sprint 7: Stats workspace | Done | Expanded `GET /api/stats/summary`, `/stats` route, overview hero/cards, difficulty/category breakdown tables, close funnel, top lists, and polished loading/error/empty states | `/stats`, `GET /api/stats/summary`, `python -m compileall app`, and `npm run build` |
 
 ## Completed Notes
 
@@ -367,7 +368,75 @@ npm run build
 
 Next practical step:
 
-- Sprint 7: Stats page and broader breakdowns, using the new summary/service foundation without duplicating dashboard logic.
+- Sprint 8: Charts API and Charts page, keeping stats aggregation on the backend and preserving the current production visual language.
+
+### Sprint 7: Stats Workspace
+
+Status: Done
+
+Implemented:
+
+- `GET /api/stats/summary` was expanded without breaking existing dashboard fields.
+- Summary now also returns:
+  - `earned_by_difficulty`
+  - `earned_by_category`
+  - `easiest_missing_maps`
+  - `best_earned_maps`
+  - `hardest_earned_maps`
+- Existing dashboard-oriented fields remain in place:
+  - `closest_missing_maps`
+  - `quick_wins`
+  - `best_margin_maps`
+  - `latest_progress_snapshot`
+  - `latest_sync_jobs`
+- `frontend/src/app/App.tsx` now exposes:
+  - `/stats` -> `StatsPage`
+- `AppSidebar` now links directly to the production Stats workspace.
+- `StatsPage` now includes:
+  - top stats hero layout with `Completion`, `Total Maps`, `Demon Earned`, `Missing`, `Earned`, `Almost There`, `Avg Margin`, `Avg Miss`, and `PB Coverage`
+  - difficulty breakdown table
+  - category breakdown table
+  - close medals funnel
+  - four top-list blocks:
+    - `Closest Missing`
+    - `Best Earned`
+    - `Hardest Earned`
+    - `Easiest Missing`
+- Production states on `/stats`:
+  - loading skeletons
+  - empty state when PB coverage is missing
+  - error state when the summary API fails
+
+Behavior:
+
+- Stats uses the existing production glass layout and shared sidebar/footer structure.
+- No new backend endpoint was added; the page is powered entirely by `GET /api/stats/summary`.
+- Dashboard remains compatible with the same summary payload after the response expansion.
+
+Verification:
+
+```powershell
+cd backend
+python -m compileall app
+```
+
+```powershell
+cd backend
+.\.venv\Scripts\python.exe - <<'PY'
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+response = client.get("/api/stats/summary")
+print(response.status_code)
+print(sorted(response.json().keys()))
+PY
+```
+
+```powershell
+cd frontend
+npm run build
+```
 
 ### Sprint 6.2: Workspace Split and Dashboard Polish
 

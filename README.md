@@ -23,9 +23,11 @@ Current delivered state:
 - Sprint 4.1 positions: `/top`-only sync, exact positions, `10k+` placeholder, progress display
 - Sprint 5 player PB sync: Trackmania OAuth, `POST /api/sync/player-pbs`, PB history, progress snapshots
 - Sprint 6 dashboard MVP: summary API, dashboard blocks, loading/error/empty states
+- Sprint 7 stats workspace: expanded summary payload, `/stats` route, difficulty/category breakdowns, close funnel, and top stats layout
 - Frontend visual foundation: design playground, progress entry page, reusable hero `WarriorProgressBar`
 - Production workspace split:
   - `/dashboard`
+  - `/stats`
   - `/maps`
   - `/settings`
   - `/design-playground`
@@ -103,6 +105,7 @@ Frontend routes:
 ```text
 /                   Progress entry / landing page
 /dashboard          Real dashboard page
+/stats              Stats workspace
 /maps               Maps workspace
 /settings           Settings workspace
 /design-playground  UI playground / design sandbox

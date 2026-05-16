@@ -388,7 +388,7 @@ Notes:
 
 ### GET /api/stats/summary
 
-Returns dashboard summary, top map lists, latest progress snapshot, and latest sync jobs.
+Returns dashboard/stats summary metrics, breakdown tables, top map lists, latest progress snapshot, and latest sync jobs.
 
 Response shape:
 
@@ -407,9 +407,33 @@ Response shape:
   "close_200_count": 42,
   "avg_diff_missing_ms": 6364.3,
   "avg_margin_earned_ms": 442.16,
+  "earned_by_difficulty": [
+    {
+      "tier": "Demon",
+      "total": 136,
+      "earned": 5,
+      "missing": 131,
+      "not_played": 120,
+      "completion_percent": 3.68
+    }
+  ],
+  "earned_by_category": [
+    {
+      "category": "Seasonal",
+      "total": 600,
+      "earned": 31,
+      "missing": 569,
+      "not_played": 540,
+      "close_count": 12,
+      "completion_percent": 5.16
+    }
+  ],
   "closest_missing_maps": [],
+  "easiest_missing_maps": [],
   "quick_wins": [],
+  "best_earned_maps": [],
   "best_margin_maps": [],
+  "hardest_earned_maps": [],
   "latest_progress_snapshot": null,
   "latest_sync_jobs": {
     "warrior_data": null,
@@ -423,6 +447,8 @@ Response shape:
 Summary map lists now also expose TMX-enriched fields:
 
 - `tmx_track_id`
+- `trackmania_io_url`
+- `thumbnail_url`
 - `tmx_url`
 - `tmx_thumbnail_url`
 - `tmx_tag_names`
@@ -431,6 +457,14 @@ Summary map lists now also expose TMX-enriched fields:
 - `tmx_length_name`
 - `tmx_style_name`
 - `tmx_type_name`
+
+Notes:
+
+- The response is intentionally shared by both `/dashboard` and `/stats`.
+- Existing dashboard fields were preserved when the Stats workspace was added.
+- `earned_by_difficulty` always uses the current difficulty tiers derived from synced required positions.
+- `earned_by_category` is grouped by the effective Warrior categories already used elsewhere in the frontend.
+- `easiest_missing_maps` and `hardest_earned_maps` depend on synced required-position data and may be sparse when positions have not been synced yet.
 
 ## Planned MVP Endpoints
 
